@@ -268,7 +268,7 @@ value unix_error_of_code (int errcode)
   errconstr =
       cst_to_constr(errcode, error_table, sizeof(error_table)/sizeof(int), -1);
   if (errconstr == Val_int(-1)) {
-    err = caml_alloc_small(1, 0);
+    err = my_alloc_small(1);
     Field(err, 0) = Val_int(errcode);
   } else {
     err = errconstr;
@@ -300,7 +300,7 @@ void unix_error(int errcode, const char *cmdname, value cmdarg)
         caml_invalid_argument("Exception Unix.Unix_error not initialized,"
                          " please link unix.cma");
     }
-    res = caml_alloc_small(4, 0);
+    res = my_alloc_small(4);
     Field(res, 0) = *unix_error_exn;
     Field(res, 1) = err;
     Field(res, 2) = name;

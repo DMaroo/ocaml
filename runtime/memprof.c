@@ -371,7 +371,7 @@ static value capture_callstack(int alloc_idx)
     caml_collect_current_callstack(&callstack_buffer, &callstack_buffer_len,
                                    callstack_size, alloc_idx);
   CAMLassert(local->suspended);
-  res = caml_alloc(callstack_len, 0);
+  res = my_alloc(callstack_len);
   memcpy(Op_val(res), callstack_buffer, sizeof(value) * callstack_len);
   if (callstack_buffer_len > 256 && callstack_buffer_len > callstack_len * 8) {
     caml_stat_free(callstack_buffer);
@@ -513,7 +513,7 @@ static value run_alloc_callback_exn(uintnat t_idx)
   value sample_info;
 
   CAMLassert(Is_block(t->block) || Is_placeholder(t->block) || t->deallocated);
-  sample_info = caml_alloc_small(4, 0);
+  sample_info = my_alloc_small(4);
   Field(sample_info, 0) = Val_long(t->n_samples);
   Field(sample_info, 1) = Val_long(t->wosize);
   Field(sample_info, 2) = Val_long(t->source);

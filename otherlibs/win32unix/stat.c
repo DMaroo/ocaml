@@ -96,7 +96,7 @@ static value stat_aux(int use_64, __int64 st_ino, struct _stat64 *buf)
   CAMLparam0 ();
   CAMLlocal1 (v);
 
-  v = caml_alloc (12, 0);
+  v = my_alloc(12);
   Store_field (v, 0, Val_int (buf->st_dev));
   Store_field (v, 1, Val_int (st_ino ? st_ino & Max_long : buf->st_ino));
   Store_field (v, 2, cst_to_constr (buf->st_mode & S_IFMT, file_kind_table,

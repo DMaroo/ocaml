@@ -84,7 +84,7 @@ CAMLprim value caml_obj_block(value tag, value size)
    * by default there is no initialization. */
   switch (tg) {
   default: {
-      res = caml_alloc(sz, tg);
+      res = my_alloc(sz);
       break;
   }
   case Abstract_tag:
@@ -92,7 +92,7 @@ CAMLprim value caml_obj_block(value tag, value size)
   case Double_array_tag: {
     /* In these cases, the initial content is irrelevant,
        no specific initialization needed. */
-    res = caml_alloc(sz, tg);
+    res = my_alloc(sz);
     break;
   }
   case Closure_tag: {
@@ -102,7 +102,7 @@ CAMLprim value caml_obj_block(value tag, value size)
        a sane value, as it may be accessed by runtime functions. */
     /* Closinfo_val is the second field, so we need size at least 2 */
     if (sz < 2) caml_invalid_argument ("Obj.new_block");
-    res = caml_alloc(sz, tg);
+    res = my_alloc(sz);
     Closinfo_val(res) = Make_closinfo(0, 2); /* does not allocate */
     break;
   }
@@ -114,7 +114,7 @@ CAMLprim value caml_obj_block(value tag, value size)
        length returned by [String.length] and [Bytes.length] is
        a non-negative number. */
     if (sz == 0) caml_invalid_argument ("Obj.new_block");
-    res = caml_alloc(sz, tg);
+    res = my_alloc(sz);
     Field (res, sz - 1) = 0;
     break;
   }
@@ -143,10 +143,10 @@ CAMLprim value caml_obj_with_tag(value new_tag_v, value arg)
   tg = (tag_t)Long_val(new_tag_v);
   if (sz == 0) CAMLreturn (Atom(tg));
   if (tg >= No_scan_tag) {
-    res = caml_alloc(sz, tg);
+    res = my_alloc(sz);
     memcpy(Bp_val(res), Bp_val(arg), sz * sizeof(value));
   } else if (sz <= Max_young_wosize) {
-    res = caml_alloc_small(sz, tg);
+    res = my_alloc_small(sz);
     for (i = 0; i < sz; i++) Field(res, i) = Field(arg, i);
   } else {
     res = caml_alloc_shr(sz, tg);
@@ -233,7 +233,7 @@ CAMLprim value caml_lazy_make_forward (value v)
   CAMLparam1 (v);
   CAMLlocal1 (res);
 
-  res = caml_alloc_small (1, Forward_tag);
+  res = my_alloc_small (1);
   Field (res, 0) = v;
   CAMLreturn (res);
 }

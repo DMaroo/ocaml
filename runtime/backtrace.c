@@ -169,12 +169,12 @@ CAMLprim value caml_get_exception_raw_backtrace(value unit)
   if (!Caml_state->backtrace_active ||
       Caml_state->backtrace_buffer == NULL ||
       Caml_state->backtrace_pos == 0) {
-    res = caml_alloc(0, 0);
+    res = my_alloc(0);
   }
   else {
     intnat i, len = Caml_state->backtrace_pos;
 
-    res = caml_alloc(len, 0);
+    res = my_alloc(len);
     for (i = 0; i < len; i++)
       Field(res, i) = Val_backtrace_slot(Caml_state->backtrace_buffer[i]);
   }
@@ -233,7 +233,7 @@ static value caml_convert_debuginfo(debuginfo dbg)
   if (li.loc_valid) {
     fname = caml_copy_string(li.loc_filename);
     dname = caml_copy_string(li.loc_defname);
-    p = caml_alloc_small(7, 0);
+    p = my_alloc_small(7);
     Field(p, 0) = Val_bool(li.loc_is_raise);
     Field(p, 1) = fname;
     Field(p, 2) = Val_int(li.loc_lnum);
@@ -242,7 +242,7 @@ static value caml_convert_debuginfo(debuginfo dbg)
     Field(p, 5) = Val_bool(li.loc_is_inlined);
     Field(p, 6) = dname;
   } else {
-    p = caml_alloc_small(1, 1);
+    p = my_alloc_small(1);
     Field(p, 0) = Val_bool(li.loc_is_raise);
   }
 
@@ -276,7 +276,7 @@ CAMLprim value caml_convert_raw_backtrace(value bt)
       index++;
   }
 
-  array = caml_alloc(index, 0);
+  array = my_alloc(index);
 
   for (i = 0, index = 0; i < Wosize_val(bt); ++i)
   {
@@ -325,7 +325,7 @@ CAMLprim value caml_raw_backtrace_next_slot(value slot)
     v = Val_int(0); /* None */
   else
   {
-    v = caml_alloc(1, 0);
+    v = my_alloc(1);
     Field(v, 0) = Val_debuginfo(dbg);
   }
 
@@ -351,14 +351,14 @@ CAMLprim value caml_get_exception_backtrace(value unit)
   } else {
     backtrace = caml_get_exception_raw_backtrace(Val_unit);
 
-    arr = caml_alloc(Wosize_val(backtrace), 0);
+    arr = my_alloc(Wosize_val(backtrace));
     for (i = 0; i < Wosize_val(backtrace); i++) {
       backtrace_slot slot = Backtrace_slot_val(Field(backtrace, i));
       debuginfo dbg = caml_debuginfo_extract(slot);
       Store_field(arr, i, caml_convert_debuginfo(dbg));
     }
 
-    res = caml_alloc_small(1, 0); Field(res, 0) = arr; /* Some */
+    res = my_alloc_small(1); Field(res, 0) = arr; /* Some */
   }
 
   CAMLreturn(res);
@@ -373,7 +373,7 @@ CAMLprim value caml_get_current_callstack(value max_frames_value)
   intnat callstack_len =
     caml_collect_current_callstack(&callstack, &callstack_alloc_len,
                                    Long_val(max_frames_value), -1);
-  res = caml_alloc(callstack_len, 0);
+  res = my_alloc(callstack_len);
   memcpy(Op_val(res), callstack, sizeof(value) * callstack_len);
   caml_stat_free(callstack);
   CAMLreturn(res);

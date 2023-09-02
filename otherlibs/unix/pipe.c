@@ -33,7 +33,7 @@ CAMLprim value unix_pipe(value cloexec, value vunit)
     unix_set_cloexec(fd[1], "pipe", Nothing);
   }
 #endif
-  res = caml_alloc_small(2, 0);
+  res = my_alloc_small(2);
   Field(res, 0) = Val_int(fd[0]);
   Field(res, 1) = Val_int(fd[1]);
   return res;

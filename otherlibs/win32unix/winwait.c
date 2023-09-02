@@ -25,10 +25,10 @@ static value alloc_process_status(HANDLE pid, int status)
 {
   value res, st;
 
-  st = caml_alloc(1, 0);
+  st = my_alloc(1);
   Field(st, 0) = Val_int(status);
   Begin_root (st);
-    res = caml_alloc_small(2, 0);
+    res = my_alloc_small(2);
     Field(res, 0) = Val_long((intnat) pid);
     Field(res, 1) = st;
   End_roots();

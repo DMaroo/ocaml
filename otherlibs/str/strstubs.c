@@ -132,7 +132,7 @@ static value re_alloc_groups(value re, unsigned char * starttxt,
   int i;
   struct re_group * group;
 
-  res = caml_alloc(n * 2, 0);
+  res = my_alloc(n * 2);
   for (i = 0; i < n; i++) {
     group = &(groups[i]);
     if (group->start == NULL || group->end == NULL) {

@@ -966,7 +966,7 @@ static value fdset_to_fdlist(value fdlist, fd_set *fdset)
   for (/*nothing*/; fdlist != Val_int(0); fdlist = Field(fdlist, 1)) {
     s = Field(fdlist, 0);
     if (FD_ISSET(Socket_val(s), fdset)) {
-      value newres = caml_alloc_small(2, 0);
+      value newres = my_alloc_small(2);
       Field(newres, 0) = s;
       Field(newres, 1) = res;
       res = newres;
@@ -1263,7 +1263,7 @@ CAMLprim value unix_select(value readfds, value writefds, value exceptfds,
               for (i = 0; i < iterSelectData->nResultsCount; i++)
                 {
                   iterResult = &(iterSelectData->aResults[i]);
-                  l = caml_alloc_small(2, 0);
+                  l = my_alloc_small(2);
                   Field(l, 0) = find_handle(iterResult, readfds, writefds,
                                             exceptfds);
                   switch (iterResult->EMode)
@@ -1319,7 +1319,7 @@ CAMLprim value unix_select(value readfds, value writefds, value exceptfds,
   }
 
   DEBUG_PRINT("Build final result");
-  res = caml_alloc_small(3, 0);
+  res = my_alloc_small(3);
   Field(res, 0) = read_list;
   Field(res, 1) = write_list;
   Field(res, 2) = except_list;

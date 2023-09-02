@@ -388,7 +388,7 @@ static void read_main_debug_info(struct debug_info *di)
 
     Lock(chan);
     num_events = caml_getword(chan);
-    events = caml_alloc(num_events, 0);
+    events = my_alloc(num_events);
 
     for (i = 0; i < num_events; i++) {
       orig = caml_getword(chan);

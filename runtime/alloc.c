@@ -109,7 +109,7 @@ CAMLexport value my_alloc_small(mlsize_t wosize) {
 /* [n] is a number of words (fields) */
 CAMLexport value caml_alloc_tuple(mlsize_t n)
 {
-  return caml_alloc(n, 0);
+  return my_alloc(n);
 }
 
 
@@ -169,7 +169,7 @@ CAMLexport value caml_alloc_array(value (*funct)(char const *),
 
   nbr = 0;
   while (arr[nbr] != 0) nbr++;
-  result = caml_alloc (nbr, 0);
+  result = my_alloc(nbr);
   for (n = 0; n < nbr; n++) {
     /* The two statements below must be separate because of evaluation
        order (don't take the address &Field(result, n) before
@@ -200,7 +200,7 @@ value caml_alloc_float_array(mlsize_t len)
   }
   return result;
 #else
-  return caml_alloc (len, 0);
+  return my_alloc(len);
 #endif
 }
 
@@ -227,7 +227,7 @@ CAMLexport int caml_convert_flag_list(value list, int *flags)
 CAMLprim value caml_alloc_dummy(value size)
 {
   mlsize_t wosize = Long_val(size);
-  return caml_alloc (wosize, 0);
+  return my_alloc(wosize);
 }
 
 /* [size] is a [value] representing number of words (fields) */
@@ -241,13 +241,13 @@ CAMLprim value caml_alloc_dummy_function(value size,value arity)
 CAMLprim value caml_alloc_dummy_float (value size)
 {
   mlsize_t wosize = Long_val(size) * Double_wosize;
-  return caml_alloc (wosize, 0);
+  return my_alloc(wosize);
 }
 
 CAMLprim value caml_alloc_dummy_infix(value vsize, value voffset)
 {
   mlsize_t wosize = Long_val(vsize), offset = Long_val(voffset);
-  value v = caml_alloc(wosize, Closure_tag);
+  value v = my_alloc(wosize);
   /* The following choice of closure info causes the GC to skip
      the whole block contents.  This is correct since the dummy
      block contains no pointers into the heap.  However, the block
@@ -309,7 +309,7 @@ CAMLprim value caml_update_dummy(value dummy, value newval)
 CAMLexport value caml_alloc_some(value v)
 {
   CAMLparam1(v);
-  value some = caml_alloc_small(1, 0);
+  value some = my_alloc_small(1);
   Field(some, 0) = v;
   CAMLreturn(some);
 }

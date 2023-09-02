@@ -42,7 +42,7 @@ CAMLprim value unix_socketpair(value cloexec, value domain,
     unix_set_cloexec(sv[1], "socketpair", Nothing);
   }
 #endif
-  res = caml_alloc_small(2, 0);
+  res = my_alloc_small(2);
   Field(res,0) = Val_int(sv[0]);
   Field(res,1) = Val_int(sv[1]);
   return res;

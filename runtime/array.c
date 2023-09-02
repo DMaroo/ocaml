@@ -224,14 +224,14 @@ CAMLprim value caml_make_vect(value len, value init)
     d = Double_val(init);
     wsize = size * Double_wosize;
     if (wsize > Max_wosize) caml_invalid_argument("Array.make");
-    res = caml_alloc(wsize, Double_array_tag);
+    res = my_alloc(wsize);
     for (i = 0; i < size; i++) {
       Store_double_flat_field(res, i, d);
     }
 #endif
   } else {
     if (size <= Max_young_wosize) {
-      res = caml_alloc_small(size, 0);
+      res = my_alloc_small(size);
       for (i = 0; i < size; i++) Field(res, i) = init;
     }
     else if (size > Max_wosize) caml_invalid_argument("Array.make");
@@ -295,7 +295,7 @@ CAMLprim value caml_make_array(value init)
     } else {
       wsize = size * Double_wosize;
       if (wsize <= Max_young_wosize) {
-        res = caml_alloc_small(wsize, Double_array_tag);
+        res = my_alloc_small(wsize);
       } else {
         res = caml_alloc_shr(wsize, Double_array_tag);
       }
@@ -404,7 +404,7 @@ static value caml_array_gather(intnat num_arrays,
     /* This is an array of floats.  We can use memcpy directly. */
     if (size > Max_wosize/Double_wosize) caml_invalid_argument("Array.concat");
     wsize = size * Double_wosize;
-    res = caml_alloc(wsize, Double_array_tag);
+    res = my_alloc(wsize);
     for (i = 0, pos = 0; i < num_arrays; i++) {
       memcpy((double *)res + pos,
              (double *)arrays[i] + offsets[i],
@@ -417,7 +417,7 @@ static value caml_array_gather(intnat num_arrays,
   else if (size <= Max_young_wosize) {
     /* Array of values, small enough to fit in young generation.
        We can use memcpy directly. */
-    res = caml_alloc_small(size, 0);
+    res = my_alloc_small(size);
     for (i = 0, pos = 0; i < num_arrays; i++) {
       memcpy(&Field(res, pos),
              &Field(arrays[i], offsets[i]),

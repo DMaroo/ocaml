@@ -15,14 +15,14 @@ value stub(value ref)
   /* First, do enough major allocations to do a full major collection cycle */
   coll_before = Caml_state_field(stat_major_collections);
   while (Caml_state_field(stat_major_collections) <= coll_before+1) {
-    caml_alloc(10000, 0);
+    my_alloc(10000);
   }
 
   /* Now, call lots of allocation functions */
 
   /* Small allocations */
-  caml_alloc(10, 0);
-  x = caml_alloc_small(2, 0);
+  my_alloc(10);
+  x = my_alloc_small(2);
   Field(x, 0) = Val_unit;
   Field(x, 1) = Val_unit;
   caml_alloc_tuple(3);
@@ -38,7 +38,7 @@ value stub(value ref)
   caml_alloc_sprintf("[%d]", 42);
 
   /* Large allocations */
-  caml_alloc(1000, 0);
+  my_alloc(1000);
   caml_alloc_shr(1000, 0);
   caml_alloc_tuple(1000);
   caml_alloc_float_array(1000);

@@ -47,7 +47,7 @@ static value alloc_custom_gen (struct custom_operations * ops,
 
   wosize = 1 + (bsz + sizeof(value) - 1) / sizeof(value);
   if (wosize <= Max_young_wosize) {
-    result = caml_alloc_small(wosize, Custom_tag);
+    result = my_alloc_small(wosize);
     Custom_ops_val(result) = ops;
     if (ops->finalize != NULL || mem != 0) {
       if (mem > mem_minor) {

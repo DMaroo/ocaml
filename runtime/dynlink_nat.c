@@ -37,7 +37,7 @@ CAMLexport void (*caml_natdynlink_hook)(void* handle, const char* unit) = NULL;
 
 #define Handle_val(v) (*((void **) Data_abstract_val(v)))
 static value Val_handle(void* handle) {
-  value res = caml_alloc_small(1, Abstract_tag);
+  value res = my_alloc_small(1);
   Handle_val(res) = handle;
   return res;
 }
@@ -149,12 +149,12 @@ CAMLprim value caml_natdynlink_run_toplevel(value filename, value symbol)
   caml_stat_free(p);
 
   if (NULL == handle) {
-    res = caml_alloc(1,1);
+    res = my_alloc(1);
     v = caml_copy_string(caml_dlerror());
     Store_field(res, 0, v);
   } else {
     handle_v = Val_handle(handle);
-    res = caml_alloc(1,0);
+    res = my_alloc(1);
     v = caml_natdynlink_run(handle_v, symbol);
     Store_field(res, 0, v);
   }

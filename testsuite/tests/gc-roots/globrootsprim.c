@@ -74,7 +74,7 @@ value gb_generational_remove(value vblock)
 value root;
 
 value gb_young2old(value _dummy) {
-  root = caml_alloc_small(1, 0);
+  root = my_alloc_small(1);
   caml_register_generational_global_root(&root);
   caml_modify_generational_global_root(&root, caml_alloc_shr(10, String_tag));
   Field(root, 0) = 0xFFFFFFFF;
@@ -95,7 +95,7 @@ value gb_static2young(value static_value, value full_major) {
   caml_modify_generational_global_root(&root, static_value);
 
   /* Overwrite it with a young value. */
-  v = caml_alloc_small(1, 0);
+  v = my_alloc_small(1);
   Field(v, 0) = Val_long(0x42);
   caml_modify_generational_global_root(&root, v);
 
@@ -104,7 +104,7 @@ value gb_static2young(value static_value, value full_major) {
 
   /* Fill the minor heap to make sure the old block is overwritten */
   for(i = 0; i < 1000000; i++)
-    caml_alloc_small(1, 0);
+    my_alloc_small(1);
 
   v = Field(root, 0);
   caml_remove_generational_global_root(&root);

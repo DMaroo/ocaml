@@ -32,7 +32,7 @@ CAMLprim value unix_environment(value unit)
 
   envp = GetEnvironmentStrings();
   for (p = envp, size = 0; *p; p += wcslen(p) + 1) size++;
-  result = caml_alloc(size, 0);
+  result = my_alloc(size);
   for (p = envp, i = 0; *p; p += wcslen(p) + 1) {
     v = caml_copy_string_of_utf16(p);
     Store_field(result, i ++, v);

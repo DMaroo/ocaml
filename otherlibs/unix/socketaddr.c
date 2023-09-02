@@ -103,7 +103,7 @@ void get_sockaddr(value mladr,
 value alloc_unix_sockaddr(value path) {
   CAMLparam1(path);
   CAMLlocal1(res);
-  res = caml_alloc_small(1, 0);
+  res = my_alloc_small(1);
   Field(res,0) = path;
   CAMLreturn(res);
 }
@@ -145,7 +145,7 @@ value alloc_sockaddr(union sock_addr_union * adr /*in*/,
   case AF_INET:
     { value a = alloc_inet_addr(&adr->s_inet.sin_addr);
       Begin_root (a);
-        res = caml_alloc_small(2, 1);
+        res = my_alloc_small(2);
         Field(res,0) = a;
         Field(res,1) = Val_int(ntohs(adr->s_inet.sin_port));
       End_roots();
@@ -155,7 +155,7 @@ value alloc_sockaddr(union sock_addr_union * adr /*in*/,
   case AF_INET6:
     { value a = alloc_inet6_addr(&adr->s_inet6.sin6_addr);
       Begin_root (a);
-        res = caml_alloc_small(2, 1);
+        res = my_alloc_small(2);
         Field(res,0) = a;
         Field(res,1) = Val_int(ntohs(adr->s_inet6.sin6_port));
       End_roots();

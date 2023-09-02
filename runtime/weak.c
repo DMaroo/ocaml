@@ -329,7 +329,7 @@ static value optionalize(int status, value *x)
   CAMLlocal2(res, v);
   if(status) {
     v = *x;
-    res = caml_alloc_small (1, Some_tag);
+    res = my_alloc_small (1);
     Field (res, 0) = v;
   } else {
     res = None_val;
@@ -464,7 +464,7 @@ CAMLexport int caml_ephemeron_get_key_copy(value ar, mlsize_t offset,
       caml_minor_collection ();
     } else {
       /* cases where loop is between 0 to 7 and where loop is equal to 9 */
-      elt = caml_alloc (Wosize_val (v), Tag_val (v));
+      elt = my_alloc(Wosize_val (v));
       /* The GC may erase, move or even change v during this call to
          caml_alloc. */
     }
@@ -521,7 +521,7 @@ CAMLexport int caml_ephemeron_get_data_copy (value ar, value *data)
       caml_minor_collection ();
     } else {
       /* cases where loop is between 0 to 7 and where loop is equal to 9 */
-      elt = caml_alloc (Wosize_val (v), Tag_val (v));
+      elt = my_alloc(Wosize_val (v));
       /** cf caml_ephemeron_get_key_copy */
     }
     ++loop;

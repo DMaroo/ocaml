@@ -49,7 +49,7 @@ CAMLprim value unix_accept(value cloexec, value sock)
 #endif
   a = alloc_sockaddr(&addr, addr_len, retcode);
   Begin_root (a);
-    res = caml_alloc_small(2, 0);
+    res = my_alloc_small(2);
     Field(res, 0) = Val_int(retcode);
     Field(res, 1) = a;
   End_roots();
