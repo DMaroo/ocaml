@@ -71,7 +71,7 @@ CAMLexport value my_alloc(mlsize_t wosize) {
     if (wosize == 0) {
       result = Atom(tag);
     } else {
-      My_alloc_small (result, wosize, 0);
+      My_alloc_small (result, wosize, tag);
 
       /* Again, since we don't care about the tag, we won't setting all the
        * fields to [Val_unit] regardless of the tag. */
