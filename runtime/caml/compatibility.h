@@ -43,8 +43,8 @@
 
 
 /* **** alloc.c */
-#define alloc CAML_DEPRECATED("alloc", "caml_alloc") caml_alloc /*SP*/
-#define alloc_small CAML_DEPRECATED("alloc_small", "caml_alloc_small") caml_alloc_small
+#define alloc CAML_DEPRECATED("alloc", "my_alloc") my_alloc /*SP*/
+#define alloc_small CAML_DEPRECATED("alloc_small", "my_alloc_small") my_alloc_small
 #define alloc_tuple CAML_DEPRECATED("alloc_tuple", "caml_alloc_tuple") caml_alloc_tuple
 #define alloc_string CAML_DEPRECATED("alloc_string", "caml_alloc_string") caml_alloc_string
 #define alloc_final CAML_DEPRECATED("alloc_final", "caml_alloc_final") caml_alloc_final
