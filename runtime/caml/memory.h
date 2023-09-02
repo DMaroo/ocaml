@@ -242,6 +242,20 @@ extern void caml_alloc_small_dispatch (intnat wosize, int flags,
 #define Alloc_small_no_track(result, wosize, tag) \
   Alloc_small_aux(result, wosize, tag, (uintnat) 0, CAML_DONT_TRACK)
 
+#define My_alloc_small(result, wosize, tag)                                    \
+  do {                                                                         \
+    Caml_state_field(young_ptr) -= Whsize_wosize(wosize);                      \
+    if (Caml_state_field(young_ptr) < Caml_state_field(young_limit)) {         \
+      Setup_for_gc;                                                            \
+      caml_alloc_small_dispatch(wosize, CAML_DO_TRACK | Alloc_small_origin, 1, \
+                                NULL);                                         \
+      Restore_after_gc;                                                        \
+    }                                                                          \
+    Hd_hp(Caml_state_field(young_ptr)) =                                       \
+        (header_t)((((header_t)wosize) << 10) + ((tag_t)tag));                 \
+    result = Val_hp(Caml_state_field(young_ptr));                              \
+  } while (0)
+
 /* Deprecated alias for [caml_modify] */
 
 #define Modify(fp,val) \

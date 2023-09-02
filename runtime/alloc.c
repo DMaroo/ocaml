@@ -58,6 +58,36 @@ CAMLexport value caml_alloc (mlsize_t wosize, tag_t tag)
   return result;
 }
 
+CAMLexport value my_alloc(mlsize_t wosize) {
+  /* Use the [No_scan_tag] for all allocations, it's fine if we leak memory. */
+  tag_t tag = No_scan_tag;
+  value result;
+  mlsize_t i;
+
+  /* We don't care about tags, so we don't need to worry about tag checking here
+   * for now. */
+
+  if (wosize <= Max_young_wosize) {
+    if (wosize == 0) {
+      result = Atom(tag);
+    } else {
+      My_alloc_small (result, wosize, 0);
+
+      /* Again, since we don't care about the tag, we won't setting all the
+       * fields to [Val_unit] regardless of the tag. */
+      for (i = 0; i < wosize; i++)
+        Field(result, i) = Val_unit;
+    }
+  } else {
+    result = caml_alloc_shr(wosize, tag);
+    for (i = 0; i < wosize; i++)
+      Field(result, i) = Val_unit;
+    result = caml_check_urgent_gc(result);
+  }
+
+  return result;
+}
+
 CAMLexport value caml_alloc_small (mlsize_t wosize, tag_t tag)
 {
   value result;
@@ -69,11 +99,19 @@ CAMLexport value caml_alloc_small (mlsize_t wosize, tag_t tag)
   return result;
 }
 
+CAMLexport value my_alloc_small(mlsize_t wosize) {
+  value result;
+
+  My_alloc_small(result, wosize, No_scan_tag);
+  return result;
+}
+
 /* [n] is a number of words (fields) */
 CAMLexport value caml_alloc_tuple(mlsize_t n)
 {
   return caml_alloc(n, 0);
 }
+
 
 /* [len] is a number of bytes (chars) */
 CAMLexport value caml_alloc_string (mlsize_t len)
