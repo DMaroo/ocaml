@@ -468,13 +468,9 @@ Caml_inline value caml_alloc_shr_aux (mlsize_t wosize, tag_t tag, int track,
 
   if (wosize > Max_wosize) return 0;
   CAML_EV_ALLOC(wosize);
-  hp = caml_fl_allocate (wosize);
-  if (hp == NULL){
-    new_block = expand_heap (wosize);
-    if (new_block == NULL) return 0;
-    caml_fl_add_blocks ((value) new_block);
-    hp = caml_fl_allocate (wosize);
-  }
+  new_block = expand_heap (wosize);
+  if (new_block == NULL) return 0;
+  hp = (header_t *) new_block;
 
   CAMLassert (Is_in_heap (Val_hp (hp)));
 
