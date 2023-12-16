@@ -481,7 +481,7 @@ CAMLprim value caml_gc_minor(value v)
 
   CAML_EV_BEGIN(EV_EXPLICIT_GC_MINOR);
   CAMLassert (v == Val_unit);
-  caml_request_minor_gc ();
+  caml_request_gc ();
   // call the gc and call finalisers
   exn = caml_process_pending_actions_exn();
   CAML_EV_END(EV_EXPLICIT_GC_MINOR);
@@ -555,7 +555,7 @@ CAMLprim value caml_gc_major_slice (value v)
   if (caml_gc_phase == Phase_idle){
     /* We need to start a new major GC cycle. Go through the pending_action
        machinery. */
-    caml_request_major_slice ();
+    caml_request_gc ();
     exn = caml_process_pending_actions_exn ();
       /* Calls the major GC without passing [v] but the initial slice
          ignores this parameter anyway. */

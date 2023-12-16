@@ -801,8 +801,8 @@ void caml_memprof_track_custom(value block, mlsize_t bytes)
    each minor collection. Extra calls do not change the statistical
    properties of the sampling because of the memorylessness of the
    geometric distribution. */
-// void caml_memprof_renew_minor_sample(void)
-// {
+void caml_memprof_renew_minor_sample(void)
+{
 //   if (lambda == 0 || local->suspended)
 //     /* No trigger in the current minor heap. */
 //     caml_memprof_young_trigger = Caml_state->young_alloc_start;
@@ -816,7 +816,7 @@ void caml_memprof_track_custom(value block, mlsize_t bytes)
 //   }
 
 //   caml_update_young_limit();
-// }
+}
 
 /* Called when exceeding the threshold for the next sample in the
    minor heap, from the C code (the handling is different when called

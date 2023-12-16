@@ -75,8 +75,8 @@ CAMLextern int volatile caml_something_to_do;
 #define caml_requested_minor_gc (Caml_state_field(requested_minor_gc))
 
 // void caml_update_young_limit(void);
-void caml_request_major_slice (void);
-void caml_request_minor_gc (void);
+// void caml_request_major_slice (void);
+void caml_request_gc (void);
 CAMLextern int caml_convert_signal_number (int);
 CAMLextern int caml_rev_convert_signal_number (int);
 value caml_execute_signal_exn(int signal_number, int in_signal_handler);
