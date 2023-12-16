@@ -579,7 +579,7 @@ static LONG CALLBACK
       faulting_address = exn_info->ExceptionRecord->ExceptionInformation[1];
 
       /* refresh runtime parameters from registers */
-      Caml_state->young_ptr = (value *) ctx->R15;
+      // Caml_state->young_ptr = (value *) ctx->R15;
 
       /* call caml_reset_stack(faulting_address) using the alternate stack */
       alt_rsp  = win32_alt_stack + sizeof(win32_alt_stack) / sizeof(uintnat);

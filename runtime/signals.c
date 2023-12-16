@@ -114,7 +114,7 @@ void caml_set_action_pending(void)
      [caml_modify]), this is only moderately effective on ports that cache
      [Caml_state->young_limit] in a register, so it may take a while before the
      register is reloaded from [Caml_state->young_limit]. */
-  Caml_state->young_limit = Caml_state->young_alloc_end;
+  // Caml_state->young_limit = Caml_state->young_alloc_end;
 }
 
 /* Record the delivery of a signal, and arrange for it to be processed
@@ -122,7 +122,7 @@ void caml_set_action_pending(void)
    - via caml_something_to_do, processed in
      caml_process_pending_actions_exn.
    - by playing with the allocation limit, processed in
-     caml_garbage_collection and caml_alloc_small_dispatch.
+     caml_garbage_collection and caml_alloc_dispatch.
 */
 
 CAMLno_tsan
@@ -227,33 +227,11 @@ value caml_execute_signal_exn(int signal_number, int in_signal_handler)
   return res;
 }
 
-void caml_update_young_limit (void)
-{
-  CAMLassert(Caml_state->young_alloc_start <= caml_memprof_young_trigger &&
-             caml_memprof_young_trigger <= Caml_state->young_alloc_end);
-  CAMLassert(Caml_state->young_alloc_start <= Caml_state->young_trigger &&
-             Caml_state->young_trigger < Caml_state->young_alloc_end);
-
-  /* The minor heap grows downwards. The first trigger is the largest one. */
-  Caml_state->young_limit =
-    caml_memprof_young_trigger < Caml_state->young_trigger ?
-    Caml_state->young_trigger : caml_memprof_young_trigger;
-
-  if(caml_something_to_do)
-    Caml_state->young_limit = Caml_state->young_alloc_end;
-}
-
 /* Arrange for a garbage collection to be performed as soon as possible */
 
-void caml_request_major_slice (void)
+void caml_request_gc (void)
 {
-  Caml_state->requested_major_slice = 1;
-  caml_set_action_pending();
-}
-
-void caml_request_minor_gc (void)
-{
-  Caml_state->requested_minor_gc = 1;
+  Caml_state->requested_gc = 1;
   caml_set_action_pending();
 }
 
@@ -266,7 +244,7 @@ value caml_do_pending_actions_exn(void)
   // Do any pending minor collection or major slice
   caml_check_urgent_gc(Val_unit);
 
-  caml_update_young_limit();
+  // caml_update_young_limit();
 
   // Call signal handlers first
   exn = caml_process_pending_signals_exn();
@@ -473,7 +451,7 @@ CAMLprim value caml_install_signal_handler(value signal_number, value action)
     res = Val_int(1);
     break;
   case 2:                       /* was Signal_handle */
-    res = caml_alloc_small (1, 0);
+    res = caml_alloc (1, 0);
     Field(res, 0) = Field(caml_signal_handlers, sig);
     break;
   default:                      /* error in caml_set_signal_action */

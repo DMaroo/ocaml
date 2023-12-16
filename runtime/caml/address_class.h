@@ -65,10 +65,10 @@
 /* Use the following macros to test an address for the different classes
    it might belong to. */
 
-#define Is_young(val) \
-  (CAMLassert (Is_block (val)), \
-   (char *)(val) < (char *)Caml_state_field(young_end) && \
-   (char *)(val) > (char *)Caml_state_field(young_start))
+/* #define Is_young(val) \
+//   (CAMLassert (Is_block (val)), \
+//    (char *)(val) < (char *)Caml_state_field(young_end) && \
+//    (char *)(val) > (char *)Caml_state_field(young_start)) */
 
 #define Is_in_heap(a) (Classify_addr(a) & In_heap)
 

@@ -201,21 +201,21 @@ typedef uint64_t uintnat;
 
 /* Maximum size of a block allocated in the young generation (words). */
 /* Must be > 4 */
-#define Max_young_wosize 256
-#define Max_young_whsize (Whsize_wosize (Max_young_wosize))
+// #define Max_young_wosize 256
+// #define Max_young_whsize (Whsize_wosize (Max_young_wosize))
 
 
 /* Minimum size of the minor zone (words).
    This must be at least [2 * Max_young_whsize]. */
-#define Minor_heap_min 4096
+// #define Minor_heap_min 4096
 
 /* Maximum size of the minor zone (words).
    Must be greater than or equal to [Minor_heap_min].
 */
-#define Minor_heap_max (1 << 28)
+// #define Minor_heap_max (1 << 28)
 
 /* Default size of the minor zone. (words)  */
-#define Minor_heap_def 262144
+#define Old_minor_heap_def 262144
 
 
 /* Minimum size increment when growing the heap (words).
@@ -248,23 +248,23 @@ typedef uint64_t uintnat;
 /* Default setting for the major GC slice smoothing window: 1
    (i.e. no smoothing)
 */
-#define Major_window_def 1
+#define Gc_window_def 1
 
 /* Maximum size of the major GC slice smoothing window. */
-#define Max_major_window 50
+#define Max_gc_window 50
 
 /* Default setting for the ratio of custom garbage to major heap size.
    Documented in gc.mli */
-#define Custom_major_ratio_def 44
+#define Custom_gc_ratio_def 44
 
 /* Default setting for the ratio of custom garbage to minor heap size.
    Documented in gc.mli */
-#define Custom_minor_ratio_def 100
+// #define Custom_minor_ratio_def 100
 
 /* Default setting for maximum size of custom objects counted as garbage
    in the minor heap.
    Documented in gc.mli */
-#define Custom_minor_max_bsz_def 8192
+// #define Custom_minor_max_bsz_def 8192
 
 /* Default allocation policy. */
 #define Allocation_policy_def caml_policy_best_fit

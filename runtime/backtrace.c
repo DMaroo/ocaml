@@ -233,7 +233,7 @@ static value caml_convert_debuginfo(debuginfo dbg)
   if (li.loc_valid) {
     fname = caml_copy_string(li.loc_filename);
     dname = caml_copy_string(li.loc_defname);
-    p = caml_alloc_small(7, 0);
+    p = caml_alloc(7, 0);
     Field(p, 0) = Val_bool(li.loc_is_raise);
     Field(p, 1) = fname;
     Field(p, 2) = Val_int(li.loc_lnum);
@@ -242,7 +242,7 @@ static value caml_convert_debuginfo(debuginfo dbg)
     Field(p, 5) = Val_bool(li.loc_is_inlined);
     Field(p, 6) = dname;
   } else {
-    p = caml_alloc_small(1, 1);
+    p = caml_alloc(1, 1);
     Field(p, 0) = Val_bool(li.loc_is_raise);
   }
 
@@ -358,7 +358,7 @@ CAMLprim value caml_get_exception_backtrace(value unit)
       Store_field(arr, i, caml_convert_debuginfo(dbg));
     }
 
-    res = caml_alloc_small(1, 0); Field(res, 0) = arr; /* Some */
+    res = caml_alloc(1, 0); Field(res, 0) = arr; /* Some */
   }
 
   CAMLreturn(res);

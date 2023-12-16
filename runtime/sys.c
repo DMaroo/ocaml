@@ -117,25 +117,17 @@ CAMLexport void caml_do_exit(int retcode)
 {
   if ((caml_verb_gc & 0x400) != 0) {
     /* cf caml_gc_counters */
-    double minwords = Caml_state->stat_minor_words
-      + (double) (Caml_state->young_end - Caml_state->young_ptr);
-    double prowords = Caml_state->stat_promoted_words;
     double majwords =
-      Caml_state->stat_major_words + (double) caml_allocated_words;
-    double allocated_words = minwords + majwords - prowords;
-    intnat mincoll = Caml_state->stat_minor_collections;
-    intnat majcoll = Caml_state->stat_major_collections;
+      Caml_state->stat_words + (double) caml_allocated_words;
+    double allocated_words = majwords;
+    intnat majcoll = Caml_state->stat_collections;
     intnat heap_words = Caml_state->stat_heap_wsz;
     intnat heap_chunks = Caml_state->stat_heap_chunks;
     intnat top_heap_words = Caml_state->stat_top_heap_wsz;
     intnat cpct = Caml_state->stat_compactions;
-    intnat forcmajcoll = Caml_state->stat_forced_major_collections;
+    intnat forcmajcoll = Caml_state->stat_forced_collections;
     caml_gc_message(0x400, "allocated_words: %.0f\n", allocated_words);
-    caml_gc_message(0x400, "minor_words: %.0f\n", minwords);
-    caml_gc_message(0x400, "promoted_words: %.0f\n", prowords);
     caml_gc_message(0x400, "major_words: %.0f\n", majwords);
-    caml_gc_message(0x400, "minor_collections: %"ARCH_INTNAT_PRINTF_FORMAT"d\n",
-                    mincoll);
     caml_gc_message(0x400, "major_collections: %"ARCH_INTNAT_PRINTF_FORMAT"d\n",
                     majcoll);
     caml_gc_message(0x400, "heap_words: %"ARCH_INTNAT_PRINTF_FORMAT"d\n",
@@ -424,7 +416,7 @@ CAMLprim value caml_sys_get_argv(value unit)
   CAMLparam0 ();   /* unit is unused */
   CAMLlocal2 (exe_name, res);
   exe_name = caml_copy_string_of_os(caml_exe_name);
-  res = caml_alloc_small(2, 0);
+  res = caml_alloc(2, 0);
   Field(res, 0) = exe_name;
   Field(res, 1) = main_argv;
   CAMLreturn(res);
@@ -610,7 +602,7 @@ CAMLprim value caml_sys_random_seed (value unit)
   n = caml_unix_random_seed(data);
 #endif
   /* Convert to an OCaml array of ints */
-  res = caml_alloc_small(n, 0);
+  res = caml_alloc(n, 0);
   for (i = 0; i < n; i++) Field(res, i) = Val_long(data[i]);
   return res;
 }
@@ -667,7 +659,7 @@ CAMLprim value caml_sys_get_config(value unit)
   CAMLlocal2 (result, ostype);
 
   ostype = caml_copy_string(OCAML_OS_TYPE);
-  result = caml_alloc_small (3, 0);
+  result = caml_alloc (3, 0);
   Field(result, 0) = ostype;
   Field(result, 1) = Val_long (8 * sizeof(value));
 #ifdef ARCH_BIG_ENDIAN

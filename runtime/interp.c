@@ -534,7 +534,7 @@ value caml_interprete(code_t prog, asize_t prog_size)
       } else {
         mlsize_t num_args, i;
         num_args = 1 + extra_args; /* arg1 + extra args */
-        Alloc_small(accu, num_args + 3, Closure_tag);
+        accu = caml_alloc(num_args + 3, Closure_tag);
         Field(accu, 2) = env;
         for (i = 0; i < num_args; i++) Field(accu, i + 3) = sp[i];
         Code_val(accu) = pc - 3; /* Point to the preceding RESTART instr. */
@@ -552,17 +552,17 @@ value caml_interprete(code_t prog, asize_t prog_size)
       int nvars = *pc++;
       int i;
       if (nvars > 0) *--sp = accu;
-      if (nvars <= Max_young_wosize - 2) {
-        /* nvars + 2 <= Max_young_wosize, can allocate in minor heap */
-        Alloc_small(accu, 2 + nvars, Closure_tag);
-        for (i = 0; i < nvars; i++) Field(accu, i + 2) = sp[i];
-      } else {
+      // if (nvars <= Max_young_wosize - 2) {
+      //   /* nvars + 2 <= Max_young_wosize, can allocate in minor heap */
+      //   Alloc_small(accu, 2 + nvars, Closure_tag);
+      //   for (i = 0; i < nvars; i++) Field(accu, i + 2) = sp[i];
+      // } else {
         /* PR#6385: must allocate in major heap */
         /* caml_alloc_shr and caml_initialize never trigger a GC,
            so no need to Setup_for_gc */
         accu = caml_alloc_shr(2 + nvars, Closure_tag);
         for (i = 0; i < nvars; i++) caml_initialize(&Field(accu, i + 2), sp[i]);
-      }
+      // }
       /* The code pointer is not in the heap, so no need to go through
          caml_initialize. */
       Code_val(accu) = pc + *pc;
@@ -580,18 +580,18 @@ value caml_interprete(code_t prog, asize_t prog_size)
       int i;
       value * p;
       if (nvars > 0) *--sp = accu;
-      if (blksize <= Max_young_wosize) {
-        Alloc_small(accu, blksize, Closure_tag);
-        p = &Field(accu, envofs);
-        for (i = 0; i < nvars; i++, p++) *p = sp[i];
-      } else {
+      // if (blksize <= Max_young_wosize) {
+      //   Alloc_small(accu, blksize, Closure_tag);
+      //   p = &Field(accu, envofs);
+      //   for (i = 0; i < nvars; i++, p++) *p = sp[i];
+      // } else {
         /* PR#6385: must allocate in major heap */
         /* caml_alloc_shr and caml_initialize never trigger a GC,
            so no need to Setup_for_gc */
         accu = caml_alloc_shr(blksize, Closure_tag);
         p = &Field(accu, envofs);
         for (i = 0; i < nvars; i++, p++) caml_initialize(p, sp[i]);
-      }
+      // }
       sp += nvars;
       /* The code pointers and infix headers are not in the heap,
          so no need to go through caml_initialize. */
@@ -675,30 +675,28 @@ value caml_interprete(code_t prog, asize_t prog_size)
       tag_t tag = *pc++;
       mlsize_t i;
       value block;
-      if (wosize <= Max_young_wosize) {
-        Alloc_small(block, wosize, tag);
-        Field(block, 0) = accu;
-        for (i = 1; i < wosize; i++) Field(block, i) = *sp++;
-      } else {
+      // if (wosize <= Max_young_wosize) {
+      //   Alloc_small(block, wosize, tag);
+      //   Field(block, 0) = accu;
+      //   for (i = 1; i < wosize; i++) Field(block, i) = *sp++;
+      // } else {
         block = caml_alloc_shr(wosize, tag);
         caml_initialize(&Field(block, 0), accu);
         for (i = 1; i < wosize; i++) caml_initialize(&Field(block, i), *sp++);
-      }
+      // }
       accu = block;
       Next;
     }
     Instruct(MAKEBLOCK1): {
       tag_t tag = *pc++;
-      value block;
-      Alloc_small(block, 1, tag);
+      value block = caml_alloc(1, tag);
       Field(block, 0) = accu;
       accu = block;
       Next;
     }
     Instruct(MAKEBLOCK2): {
       tag_t tag = *pc++;
-      value block;
-      Alloc_small(block, 2, tag);
+      value block = caml_alloc(2, tag);
       Field(block, 0) = accu;
       Field(block, 1) = sp[0];
       sp += 1;
@@ -707,8 +705,7 @@ value caml_interprete(code_t prog, asize_t prog_size)
     }
     Instruct(MAKEBLOCK3): {
       tag_t tag = *pc++;
-      value block;
-      Alloc_small(block, 3, tag);
+      value block = caml_alloc(3, tag);
       Field(block, 0) = accu;
       Field(block, 1) = sp[0];
       Field(block, 2) = sp[1];
@@ -720,11 +717,11 @@ value caml_interprete(code_t prog, asize_t prog_size)
       mlsize_t size = *pc++;
       mlsize_t i;
       value block;
-      if (size <= Max_young_wosize / Double_wosize) {
-        Alloc_small(block, size * Double_wosize, Double_array_tag);
-      } else {
+      // if (size <= Max_young_wosize / Double_wosize) {
+      //   Alloc_small(block, size * Double_wosize, Double_array_tag);
+      // } else {
         block = caml_alloc_shr(size * Double_wosize, Double_array_tag);
-      }
+      // }
       Store_double_flat_field(block, 0, Double_val(accu));
       for (i = 1; i < size; i++){
         Store_double_flat_field(block, i, Double_val(*sp));
@@ -748,7 +745,7 @@ value caml_interprete(code_t prog, asize_t prog_size)
       accu = Field(accu, *pc); pc++; Next;
     Instruct(GETFLOATFIELD): {
       double d = Double_flat_field(accu, *pc++);
-      Alloc_small(accu, Double_wosize, Double_tag);
+      accu = caml_alloc(Double_wosize, Double_tag);
       Store_double_val(accu, d);
       Next;
     }

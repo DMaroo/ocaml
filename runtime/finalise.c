@@ -247,38 +247,38 @@ void caml_final_invert_finalisable_values ()
 /* Call [caml_oldify_one] on the closures and values of the recent set.
    This is called by the minor GC through [caml_oldify_local_roots].
 */
-void caml_final_oldify_young_roots ()
-{
-  uintnat i;
+// void caml_final_oldify_young_roots ()
+// {
+//   uintnat i;
 
-  CAMLassert (finalisable_first.old <= finalisable_first.young);
-  for (i = finalisable_first.old; i < finalisable_first.young; i++){
-    caml_oldify_one(finalisable_first.table[i].fun,
-                    &finalisable_first.table[i].fun);
-    caml_oldify_one(finalisable_first.table[i].val,
-                    &finalisable_first.table[i].val);
-  }
+//   CAMLassert (finalisable_first.old <= finalisable_first.young);
+//   for (i = finalisable_first.old; i < finalisable_first.young; i++){
+//     caml_oldify_one(finalisable_first.table[i].fun,
+//                     &finalisable_first.table[i].fun);
+//     caml_oldify_one(finalisable_first.table[i].val,
+//                     &finalisable_first.table[i].val);
+//   }
 
-  CAMLassert (finalisable_last.old <= finalisable_last.young);
-  for (i = finalisable_last.old; i < finalisable_last.young; i++){
-    caml_oldify_one(finalisable_last.table[i].fun,
-                    &finalisable_last.table[i].fun);
-  }
+//   CAMLassert (finalisable_last.old <= finalisable_last.young);
+//   for (i = finalisable_last.old; i < finalisable_last.young; i++){
+//     caml_oldify_one(finalisable_last.table[i].fun,
+//                     &finalisable_last.table[i].fun);
+//   }
 
-}
+// }
 
 static void generic_final_minor_update (struct finalisable * final)
 {
-  uintnat i, j, k;
+  uintnat i, j;
   uintnat todo_count = 0;
 
   CAMLassert (final->old <= final->young);
   for (i = final->old; i < final->young; i++){
     CAMLassert (Is_block (final->table[i].val));
     CAMLassert (Is_in_heap_or_young (final->table[i].val));
-    if (Is_young(final->table[i].val) && Hd_val(final->table[i].val) != 0){
-      ++ todo_count;
-    }
+    // if (Is_young(final->table[i].val) && Hd_val(final->table[i].val) != 0){
+    //   ++ todo_count;
+    // }
   }
 
   /** invariant:
@@ -291,26 +291,25 @@ static void generic_final_minor_update (struct finalisable * final)
   */
   if (todo_count > 0){
     alloc_to_do (todo_count);
-    k = 0;
     j = final->old;
     for (i = final->old; i < final->young; i++){
       CAMLassert (Is_block (final->table[i].val));
       CAMLassert (Is_in_heap_or_young (final->table[i].val));
       CAMLassert (Tag_val (final->table[i].val) != Forward_tag);
-      if(Is_young(final->table[i].val) && Hd_val(final->table[i].val) != 0){
-        /** dead */
-        to_do_tl->item[k] = final->table[i];
-        /* The finalisation function is called with unit not with the value */
-        to_do_tl->item[k].val = Val_unit;
-        to_do_tl->item[k].offset = 0;
-        k++;
-      }else{
+      // if(Is_young(final->table[i].val) && Hd_val(final->table[i].val) != 0){
+      //   /** dead */
+      //   to_do_tl->item[k] = final->table[i];
+      //   /* The finalisation function is called with unit not with the value */
+      //   to_do_tl->item[k].val = Val_unit;
+      //   to_do_tl->item[k].offset = 0;
+      //   k++;
+      // }else{
         /** alive */
         final->table[j++] = final->table[i];
-      }
+      // }
     }
     CAMLassert (i == final->young);
-    CAMLassert (k == todo_count);
+    // CAMLassert (k == todo_count);
     final->young = j;
     to_do_tl->size = todo_count;
   }
@@ -319,10 +318,10 @@ static void generic_final_minor_update (struct finalisable * final)
   for (i = final->old; i < final->young; i++){
     CAMLassert (Is_block (final->table[i].val));
     CAMLassert (Is_in_heap_or_young (final->table[i].val));
-    if (Is_young(final->table[i].val)) {
-      CAMLassert (Hd_val(final->table[i].val) == 0);
-      final->table[i].val = Field(final->table[i].val,0);
-    }
+    // if (Is_young(final->table[i].val)) {
+    //   CAMLassert (Hd_val(final->table[i].val) == 0);
+    //   final->table[i].val = Field(final->table[i].val,0);
+    // }
   }
 
   /** check invariant */

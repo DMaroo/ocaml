@@ -27,14 +27,12 @@ extern void caml_init_atom_table (void);
 
 extern uintnat caml_init_percent_free;
 extern uintnat caml_init_max_percent_free;
-extern uintnat caml_init_minor_heap_wsz;
+extern uintnat caml_init_old_minor_heap_wsz;
 extern uintnat caml_init_heap_chunk_sz;
 extern uintnat caml_init_heap_wsz;
 extern uintnat caml_init_max_stack_wsz;
-extern uintnat caml_init_major_window;
-extern uintnat caml_init_custom_major_ratio;
-extern uintnat caml_init_custom_minor_ratio;
-extern uintnat caml_init_custom_minor_max_bsz;
+extern uintnat caml_init_gc_window;
+extern uintnat caml_init_custom_gc_ratio;
 extern uintnat caml_init_policy;
 extern uintnat caml_trace_level;
 extern int caml_cleanup_on_exit;

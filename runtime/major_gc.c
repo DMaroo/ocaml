@@ -52,7 +52,7 @@ struct mark_stack {
 
 uintnat caml_percent_free;
 static uintnat marked_words, heap_wsz_at_cycle_start;
-uintnat caml_major_heap_increment;
+uintnat caml_heap_increment;
 CAMLexport char *caml_heap_start;
 char *caml_gc_sweep_hp;
 int caml_gc_phase;        /* always Phase_mark, Pase_clean,
@@ -115,10 +115,10 @@ int caml_ephe_list_pure;
 static value *ephes_checked_if_pure;
 static value *ephes_to_check;
 
-int caml_major_window = 1;
-double caml_major_ring[Max_major_window] = { 0. };
-int caml_major_ring_index = 0;
-double caml_major_work_credit = 0.0;
+int caml_window = 1;
+double caml_ring[Max_gc_window] = { 0. };
+int caml_ring_index = 0;
+double caml_work_credit = 0.0;
 double caml_gc_clock = 0.0;
 
 #ifdef DEBUG
@@ -129,7 +129,7 @@ static unsigned long major_gc_counter = 0;
 int caml_naked_pointers_detected = 0;
 #endif
 
-void (*caml_major_gc_hook)(void) = NULL;
+void (*caml_gc_hook)(void) = NULL;
 
 /* This function prunes the mark stack if it's about to overflow. It does so
    by building a skiplist of major heap chunks and then iterating through the
@@ -240,8 +240,9 @@ Caml_inline void mark_stack_push(struct mark_stack* stk, value block,
   for (i = offset; i < end; i++) {
     v = Field(block, i);
 
-    if (Is_block(v) && !Is_young(v))
-      /* found something to mark */
+    /* found something to mark */
+    // if (Is_block(v) && !Is_young(v))
+    if (Is_block(v))
       break;
   }
 
@@ -278,7 +279,8 @@ static void is_naked_pointer_safe (value v, value *p);
 void caml_darken (value v, value *p)
 {
 #ifdef NO_NAKED_POINTERS
-  if (Is_block(v) && !Is_young (v)) {
+  // if (Is_block(v) && !Is_young (v)) {
+  if (Is_block(v)) {
 #else
   if (Is_block(v) && Is_in_heap (v)) {
 #endif
@@ -306,7 +308,8 @@ void caml_darken (value v, value *p)
     }
   }
 #if defined(NAKED_POINTERS_CHECKER) && defined(NATIVE_CODE)
-  else if (Is_block(v) && !Is_young(v)) {
+  // else if (Is_block(v) && !Is_young(v)) {
+  else if (Is_block(v)) {
     is_naked_pointer_safe(v, p);
   }
 #endif
@@ -352,8 +355,7 @@ static int redarken_chunk(char* heap_chunk, struct mark_stack* stk) {
     header_t* hp;
     /* Skip a prefix of fields that need no marking */
     CAMLassert(me.start <= me.end && (header_t*)me.end <= end);
-    while (me.start < me.end &&
-           (!Is_block(*me.start) || Is_young(*me.start))) {
+    while (me.start < me.end && !Is_block(*me.start)) {
       me.start++;
     }
 
@@ -427,7 +429,7 @@ static void init_sweep_phase(void)
   sweep_chunk = caml_heap_start;
   caml_gc_sweep_hp = sweep_chunk;
   caml_fl_wsz_at_phase_change = caml_fl_cur_wsz;
-  if (caml_major_gc_hook) (*caml_major_gc_hook)();
+  if (caml_gc_hook) (*caml_gc_hook)();
 }
 
 /* auxiliary function of mark_ephe_aux */
@@ -441,7 +443,8 @@ Caml_inline void mark_ephe_darken(struct mark_stack* stk, value v, mlsize_t i,
   child = Field (v, i);
 
 #ifdef NO_NAKED_POINTERS
-  if (Is_block (child) && ! Is_young (child)) {
+  // if (Is_block (child) && ! Is_young (child)) {
+  if (Is_block (child)) {
 #else
   if (Is_block (child) && Is_in_heap (child)) {
 #endif
@@ -461,13 +464,13 @@ Caml_inline void mark_ephe_darken(struct mark_stack* stk, value v, mlsize_t i,
       }else{
         /* The variable child is not changed because it must be mark alive */
         Field (v, i) = f;
-        if (Is_block (f) && Is_young (f) && !Is_young (child)){
-          if(in_ephemeron) {
-            add_to_ephe_ref_table (Caml_state->ephe_ref_table, v, i);
-          } else {
-            add_to_ref_table (Caml_state->ref_table, &Field (v, i));
-          }
-        }
+        // if (Is_block (f) && Is_young (f) && !Is_young (child)){
+        //   if(in_ephemeron) {
+        //     add_to_ephe_ref_table (Caml_state->ephe_ref_table, v, i);
+        //   } else {
+        //     add_to_ref_table (Caml_state->ref_table, &Field (v, i));
+        //   }
+        // }
       }
     }
     else if (Tag_hd(chd) == Infix_tag) {
@@ -489,7 +492,8 @@ Caml_inline void mark_ephe_darken(struct mark_stack* stk, value v, mlsize_t i,
     }
   }
 #if defined(NAKED_POINTERS_CHECKER) && defined(NATIVE_CODE)
-  else if (Is_block(child) && ! Is_young(child)) {
+  // else if (Is_block(child) && ! Is_young(child)) {
+  else if (Is_block(child)) {
     is_naked_pointer_safe(child, &Field (v, i));
   }
 #endif
@@ -509,7 +513,8 @@ static void mark_ephe_aux (struct mark_stack *stk, intnat *work,
   if ( data != caml_ephe_none &&
        Is_block (data) &&
 #ifdef NO_NAKED_POINTERS
-       !Is_young(data) &&
+      //  !Is_young(data) &&
+      1 &&
 #else
        Is_in_heap (data) &&
 #endif
@@ -528,7 +533,8 @@ static void mark_ephe_aux (struct mark_stack *stk, intnat *work,
       if (key != caml_ephe_none &&
           Is_block (key) &&
 #ifdef NO_NAKED_POINTERS
-          !Is_young(key)
+          // !Is_young(key)
+          1
 #else
           Is_in_heap(key)
 #endif
@@ -630,15 +636,11 @@ Caml_noinline static intnat do_some_marking
   /* These global values are cached in locals,
      so that they can be stored in registers */
   struct mark_stack stk = *Caml_state->mark_stack;
-  uintnat young_start = (uintnat)Val_hp(Caml_state->young_start);
-  uintnat half_young_len =
-    ((uintnat)Caml_state->young_end - (uintnat)Caml_state->young_start) >> 1;
-#define Is_block_and_not_young(v) \
-  (((intnat)rotate1((uintnat)v - young_start)) >= (intnat)half_young_len)
+
 #ifdef NO_NAKED_POINTERS
-  #define Is_major_block(v) Is_block_and_not_young(v)
+  #define Is_major_block(v) true
 #else
-  #define Is_major_block(v) (Is_block_and_not_young(v) && Is_in_heap(v))
+  #define Is_major_block(v) Is_in_heap(v)
 #endif
 
 #ifdef CAML_INSTR
@@ -916,10 +918,10 @@ static void sweep_slice (intnat work)
       if (sweep_chunk == NULL){
         /* Sweeping is done. */
         caml_gc_sweep_hp = sweep_hp;
-        ++ Caml_state->stat_major_collections;
+        ++ Caml_state->stat_collections;
         work = 0;
         caml_gc_phase = Phase_idle;
-        caml_request_minor_gc ();
+        caml_request_gc ();
       }else{
         sweep_hp = sweep_chunk;
         limit = sweep_chunk + Chunk_size (sweep_chunk);
@@ -1035,15 +1037,15 @@ void caml_major_collection_slice (intnat howmuch)
                          ARCH_INTNAT_PRINTF_FORMAT "du\n",
                    (intnat) (p_backlog * 1000000));
 
-  for (i = 0; i < caml_major_window; i++){
-    caml_major_ring[i] += p / caml_major_window;
+  for (i = 0; i < caml_window; i++){
+    caml_ring[i] += p / caml_window;
   }
 
   if (caml_gc_clock >= 1.0){
     caml_gc_clock -= 1.0;
-    ++caml_major_ring_index;
-    if (caml_major_ring_index >= caml_major_window){
-      caml_major_ring_index = 0;
+    ++caml_ring_index;
+    if (caml_ring_index >= caml_window){
+      caml_ring_index = 0;
     }
   }
   if (howmuch == -1){
@@ -1052,27 +1054,27 @@ void caml_major_collection_slice (intnat howmuch)
     /* Note that the minor GC guarantees that the major slice is called in
        automatic mode (with [howmuch] = -1) at least once per clock tick.
        This means we never leave a non-empty bucket behind. */
-    spend = fmin (caml_major_work_credit,
-                  caml_major_ring[caml_major_ring_index]);
-    caml_major_work_credit -= spend;
-    filt_p = caml_major_ring[caml_major_ring_index] - spend;
-    caml_major_ring[caml_major_ring_index] = 0.0;
+    spend = fmin (caml_work_credit,
+                  caml_ring[caml_ring_index]);
+    caml_work_credit -= spend;
+    filt_p = caml_ring[caml_ring_index] - spend;
+    caml_ring[caml_ring_index] = 0.0;
   }else{
     /* forced GC slice: do work and add it to the credit */
     if (howmuch == 0){
       /* automatic setting: size of next bucket
          we do not use the current bucket, as it may be empty */
-      int i = caml_major_ring_index + 1;
-      if (i >= caml_major_window) i = 0;
-      filt_p = caml_major_ring[i];
+      int i = caml_ring_index + 1;
+      if (i >= caml_window) i = 0;
+      filt_p = caml_ring[i];
     }else{
       /* manual setting */
       filt_p = (double) howmuch * 3.0 * (100 + caml_percent_free)
                / Caml_state->stat_heap_wsz / caml_percent_free / 2.0;
     }
-    caml_major_work_credit += filt_p;
+    caml_work_credit += filt_p;
     /* Limit work credit to 1.0 */
-    caml_major_work_credit = fmin(caml_major_work_credit, 1.0);
+    caml_work_credit = fmin(caml_work_credit, 1.0);
   }
 
   p = filt_p;
@@ -1082,13 +1084,13 @@ void caml_major_collection_slice (intnat howmuch)
                    (intnat) (p * 1000000));
 
   if (caml_gc_phase == Phase_idle){
-    if (Caml_state->young_ptr == Caml_state->young_alloc_end){
-      /* We can only start a major GC cycle if the minor allocation arena
-         is empty, otherwise we'd have to treat it as a set of roots. */
-      CAML_EV_BEGIN(EV_MAJOR_ROOTS);
-      start_cycle ();
-      CAML_EV_END(EV_MAJOR_ROOTS);
-    }
+    // if (Caml_state->young_ptr == Caml_state->young_alloc_end){
+    //   /* We can only start a major GC cycle if the minor allocation arena
+    //      is empty, otherwise we'd have to treat it as a set of roots. */
+    //   CAML_EV_BEGIN(EV_MAJOR_ROOTS);
+    //   start_cycle ();
+    //   CAML_EV_END(EV_MAJOR_ROOTS);
+    // }
     p = 0;
     goto finished;
   }
@@ -1156,15 +1158,15 @@ void caml_major_collection_slice (intnat howmuch)
   /* if some of the work was not done, take it back from the credit
      or spread it over the buckets. */
   p = filt_p - p;
-  spend = fmin (p, caml_major_work_credit);
-  caml_major_work_credit -= spend;
+  spend = fmin (p, caml_work_credit);
+  caml_work_credit -= spend;
   if (p > spend){
     p -= spend;
-    p /= caml_major_window;
-    for (i = 0; i < caml_major_window; i++) caml_major_ring[i] += p;
+    p /= caml_window;
+    for (i = 0; i < caml_window; i++) caml_ring[i] += p;
   }
 
-  Caml_state->stat_major_words += caml_allocated_words;
+  Caml_state->stat_words += caml_allocated_words;
   caml_allocated_words = 0;
   caml_dependent_allocated = 0;
   caml_extra_heap_resources = 0.0;
@@ -1187,7 +1189,7 @@ void caml_finish_major_cycle (void)
   CAMLassert (redarken_first_chunk == NULL);
   while (caml_gc_phase == Phase_sweep) sweep_slice (LONG_MAX);
   CAMLassert (caml_gc_phase == Phase_idle);
-  Caml_state->stat_major_words += caml_allocated_words;
+  Caml_state->stat_words += caml_allocated_words;
   caml_allocated_words = 0;
 }
 
@@ -1200,10 +1202,10 @@ asize_t caml_clip_heap_chunk_wsz (asize_t wsz)
   uintnat incr;
 
   /* Compute the heap increment as a word size. */
-  if (caml_major_heap_increment > 1000){
-    incr = caml_major_heap_increment;
+  if (caml_heap_increment > 1000){
+    incr = caml_heap_increment;
   }else{
-    incr = Caml_state->stat_heap_wsz / 100 * caml_major_heap_increment;
+    incr = Caml_state->stat_heap_wsz / 100 * caml_heap_increment;
   }
 
   if (result < incr){
@@ -1259,23 +1261,23 @@ void caml_init_major_heap (asize_t heap_size)
 
   caml_allocated_words = 0;
   caml_extra_heap_resources = 0.0;
-  for (i = 0; i < Max_major_window; i++) caml_major_ring[i] = 0.0;
+  for (i = 0; i < Max_gc_window; i++) caml_ring[i] = 0.0;
 }
 
 void caml_set_major_window (int w){
   uintnat total = 0;
   int i;
-  if (w == caml_major_window) return;
-  CAMLassert (w <= Max_major_window);
+  if (w == caml_window) return;
+  CAMLassert (w <= Max_gc_window);
   /* Collect the current work-to-do from the buckets. */
-  for (i = 0; i < caml_major_window; i++){
-    total += caml_major_ring[i];
+  for (i = 0; i < caml_window; i++){
+    total += caml_ring[i];
   }
   /* Redistribute to the new buckets. */
   for (i = 0; i < w; i++){
-    caml_major_ring[i] = total / w;
+    caml_ring[i] = total / w;
   }
-  caml_major_window = w;
+  caml_window = w;
 }
 
 void caml_finalise_heap (void)
@@ -1374,7 +1376,8 @@ static void is_naked_pointer_safe (value v, value *p)
   tag_t t;
 
   /* The following conditions were checked by the caller */
-  CAMLassert(Is_block(v) && !Is_young(v) && !Is_in_heap(v));
+  // CAMLassert(Is_block(v) && !Is_young(v) && !Is_in_heap(v));
+  CAMLassert(Is_block(v) && !Is_in_heap(v));
 
   if (! safe_load(&Hd_val(v), &h)) goto on_segfault;
 

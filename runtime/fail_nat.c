@@ -97,7 +97,7 @@ void caml_raise_with_arg(value tag, value arg)
   CAMLparam2 (tag, arg);
   CAMLlocal1 (bucket);
 
-  bucket = caml_alloc_small (2, 0);
+  bucket = caml_alloc (2, 0);
   Field(bucket, 0) = tag;
   Field(bucket, 1) = arg;
   caml_raise(bucket);
@@ -111,8 +111,8 @@ void caml_raise_with_args(value tag, int nargs, value args[])
   value bucket;
   int i;
 
-  CAMLassert(1 + nargs <= Max_young_wosize);
-  bucket = caml_alloc_small (1 + nargs, 0);
+  // CAMLassert(1 + nargs <= Max_young_wosize);
+  bucket = caml_alloc_shr (1 + nargs, 0);
   Field(bucket, 0) = tag;
   for (i = 0; i < nargs; i++) Field(bucket, 1 + i) = args[i];
   caml_raise(bucket);

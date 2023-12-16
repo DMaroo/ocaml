@@ -43,10 +43,11 @@
   custom_bsz: cf. custom_minor_max_size in gc.mli
   policy    : cf. allocation_policy in gc.mli
 */
-void caml_init_gc (uintnat minor_size, uintnat major_size, uintnat major_incr,
-                   uintnat percent_fr, uintnat percent_m, uintnat window,
-                   uintnat custom_maj, uintnat custom_min, uintnat custom_bsz,
-                   uintnat policy);
+
+void caml_init_gc (uintnat old_minor_size, uintnat gc_size,
+                   uintnat gc_incr, uintnat percent_fr,
+                   uintnat percent_m, uintnat window,
+                   uintnat custom_gc,uintnat policy);
 
 
 #ifdef DEBUG

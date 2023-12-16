@@ -155,7 +155,7 @@ CAMLexport value caml_copy_double(double d)
 
 #define Setup_for_gc
 #define Restore_after_gc
-  Alloc_small(res, Double_wosize, Double_tag);
+  res = caml_alloc(Double_wosize, Double_tag);
 #undef Setup_for_gc
 #undef Restore_after_gc
   Store_double_val(res, d);
@@ -770,7 +770,7 @@ CAMLprim value caml_frexp_float(value f)
   int exponent;
 
   mantissa = caml_copy_double(frexp (Double_val(f), &exponent));
-  res = caml_alloc_small(2, 0);
+  res = caml_alloc(2, 0);
   Field(res, 0) = mantissa;
   Field(res, 1) = Val_int(exponent);
   CAMLreturn (res);
@@ -821,7 +821,7 @@ CAMLprim value caml_modf_float(value f)
 
   quo = caml_copy_double(modf (Double_val(f), &frem));
   rem = caml_copy_double(frem);
-  res = caml_alloc_small(2, 0);
+  res = caml_alloc(2, 0);
   Field(res, 0) = quo;
   Field(res, 1) = rem;
   CAMLreturn (res);

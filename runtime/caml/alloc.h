@@ -31,7 +31,7 @@ extern "C" {
    any OCaml callback such as finalizers or signal handlers. */
 
 CAMLextern value caml_alloc (mlsize_t wosize, tag_t);
-CAMLextern value caml_alloc_small (mlsize_t wosize, tag_t);
+// CAMLextern value caml_alloc_small (mlsize_t wosize, tag_t);
 CAMLextern value caml_alloc_tuple (mlsize_t wosize);
 CAMLextern value caml_alloc_float_array (mlsize_t len);
 CAMLextern value caml_alloc_string (mlsize_t len);  /* len in bytes (chars) */
@@ -62,7 +62,7 @@ CAMLextern int caml_convert_flag_list (value, int *);
 /* Convenience functions to deal with unboxable types. */
 Caml_inline value caml_alloc_unboxed (value arg) { return arg; }
 Caml_inline value caml_alloc_boxed (value arg) {
-  value result = caml_alloc_small (1, 0);
+  value result = caml_alloc (1, 0);
   Field (result, 0) = arg;
   return result;
 }

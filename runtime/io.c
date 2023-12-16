@@ -554,7 +554,7 @@ CAMLprim value caml_ml_out_channels_list (value unit)
         && channel->flags & CHANNEL_FLAG_MANAGED_BY_GC) {
       chan = caml_alloc_channel (channel);
       tail = res;
-      res = caml_alloc_small (2, Tag_cons);
+      res = caml_alloc (2, Tag_cons);
       Field (res, 0) = chan;
       Field (res, 1) = tail;
     }

@@ -20,19 +20,6 @@
 #include "config.h"
 
 /* Global variables moved to Caml_state in 4.10 */
-#define caml_young_start (Caml_state_field(young_start))
-#define caml_young_end (Caml_state_field(young_end))
-#define caml_young_ptr (Caml_state_field(young_ptr))
-#define caml_young_limit (Caml_state_field(young_limit))
-#define caml_young_alloc_start (Caml_state_field(young_alloc_start))
-#define caml_young_alloc_end (Caml_state_field(young_alloc_end))
-#define caml_young_alloc_mid (Caml_state_field(young_alloc_mid))
-#define caml_young_trigger (Caml_state_field(young_trigger))
-#define caml_minor_heap_wsz (Caml_state_field(minor_heap_wsz))
-#define caml_in_minor_collection (Caml_state_field(in_minor_collection))
-#define caml_extra_heap_resources_minor \
-  (Caml_state_field(extra_heap_resources_minor))
-
 
 #define CAML_TABLE_STRUCT(t) { \
   t *base;                     \
@@ -89,12 +76,13 @@ void caml_alloc_minor_tables (void);
              Wosize_hd(hd) <= Max_young_wosize &&  \
              Color_hd(hd) == 0)
 
-#define Oldify(p) do{ \
-    value __oldify__v__ = *p; \
-    if (Is_block (__oldify__v__) && Is_young (__oldify__v__)){ \
-      caml_oldify_one (__oldify__v__, (p)); \
-    } \
-  }while(0)
+#define Oldify(p) do { } while(0)
+/* #define Oldify(p) do{ \
+//     value __oldify__v__ = *p; \
+//     if (Is_block (__oldify__v__) && Is_young (__oldify__v__)){ \
+//     //   caml_oldify_one (__oldify__v__, (p)); \
+//     // } \
+//   }while(0) */
 
 Caml_inline void add_to_ref_table (struct caml_ref_table *tbl, value *p)
 {
