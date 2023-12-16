@@ -71,7 +71,8 @@ CAMLexport mlsize_t caml_ephemeron_num_keys(value eph)
 Caml_inline int Test_if_its_white(value x){
   CAMLassert (x != caml_ephe_none);
 #ifdef NO_NAKED_POINTERS
-  if (!Is_block(x) || Is_young (x)) return 0;
+  // if (!Is_block(x) || Is_young (x)) return 0;
+  if (!Is_block(x)) return 0;
 #else
   if (!Is_block(x) || !Is_in_heap(x)) return 0;
 #endif
@@ -102,7 +103,8 @@ Caml_inline int Must_be_Marked_during_mark(value x)
   CAMLassert (x != caml_ephe_none);
   CAMLassert (caml_gc_phase == Phase_mark);
 #ifdef NO_NAKED_POINTERS
-  return Is_block (x) && !Is_young (x);
+  // return Is_block (x) && !Is_young (x);
+  return Is_block (x);
 #else
   return Is_block (x) && Is_in_heap (x);
 #endif
@@ -203,16 +205,16 @@ Caml_inline int is_ephe_key_none(value ar, mlsize_t offset)
 
 static void do_set (value ar, mlsize_t offset, value v)
 {
-  if (Is_block (v) && Is_young (v)){
-    /* modified version of caml_modify */
-    value old = Field (ar, offset);
+  // if (Is_block (v) && Is_young (v)){
+  //   /* modified version of caml_modify */
+  //   value old = Field (ar, offset);
+  //   Field (ar, offset) = v;
+  //   if (!(Is_block (old) && Is_young (old))){
+  //     add_to_ephe_ref_table (Caml_state->ephe_ref_table, ar, offset);
+  //   }
+  // }else{
     Field (ar, offset) = v;
-    if (!(Is_block (old) && Is_young (old))){
-      add_to_ephe_ref_table (Caml_state->ephe_ref_table, ar, offset);
-    }
-  }else{
-    Field (ar, offset) = v;
-  }
+  // }
 }
 
 CAMLexport void caml_ephemeron_set_key(value ar, mlsize_t offset, value k)
@@ -329,7 +331,7 @@ static value optionalize(int status, value *x)
   CAMLlocal2(res, v);
   if(status) {
     v = *x;
-    res = caml_alloc_small (1, Some_tag);
+    res = caml_alloc (1, Some_tag);
     Field (res, 0) = v;
   } else {
     res = None_val;

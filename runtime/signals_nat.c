@@ -93,7 +93,7 @@ void caml_garbage_collection(void)
     /* We have computed whsize (including header), but need wosize (without) */
     allocsz -= 1;
 
-    caml_alloc_small_dispatch(allocsz, CAML_DO_TRACK | CAML_FROM_CAML,
+    caml_alloc_dispatch(allocsz, CAML_DO_TRACK | CAML_FROM_CAML,
                               nallocs, alloc_len);
   }
 }

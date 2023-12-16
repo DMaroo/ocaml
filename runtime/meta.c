@@ -124,13 +124,13 @@ CAMLprim value caml_reify_bytecode(value ls_prog,
   /* Notify debugger after fragment gets added and reified. */
   caml_debugger(CODE_LOADED, Val_long(fragnum));
 
-  clos = caml_alloc_small (2, Closure_tag);
+  clos = caml_alloc (2, Closure_tag);
   Code_val(clos) = (code_t) prog;
   Closinfo_val(clos) = Make_closinfo(0, 2);
-  bytecode = caml_alloc_small (2, Abstract_tag);
+  bytecode = caml_alloc (2, Abstract_tag);
   Bytecode_val(bytecode)->prog = prog;
   Bytecode_val(bytecode)->len = len;
-  retval = caml_alloc_small (2, 0);
+  retval = caml_alloc (2, 0);
   Field(retval, 0) = bytecode;
   Field(retval, 1) = clos;
   CAMLreturn (retval);

@@ -146,7 +146,7 @@ CAMLprim value caml_obj_with_tag(value new_tag_v, value arg)
     res = caml_alloc(sz, tg);
     memcpy(Bp_val(res), Bp_val(arg), sz * sizeof(value));
   // } else if (sz <= Max_young_wosize) {
-  //   res = caml_alloc_small(sz, tg);
+  //   res = caml_alloc(sz, tg);
   //   for (i = 0; i < sz; i++) Field(res, i) = Field(arg, i);
   } else {
     res = caml_alloc_shr(sz, tg);
@@ -187,7 +187,8 @@ CAMLprim value caml_obj_truncate (value v, value newsize)
   header_t hd = Hd_val (v);
   tag_t tag = Tag_hd (hd);
   color_t color = Color_hd (hd);
-  color_t frag_color = Is_young(v) ? 0 : Caml_black;
+  // color_t frag_color = Is_young(v) ? 0 : Caml_black;
+  color_t frag_color = Caml_black;
   mlsize_t wosize = Wosize_hd (hd);
   mlsize_t i;
 
@@ -233,7 +234,7 @@ CAMLprim value caml_lazy_make_forward (value v)
   CAMLparam1 (v);
   CAMLlocal1 (res);
 
-  res = caml_alloc_small (1, Forward_tag);
+  res = caml_alloc (1, Forward_tag);
   Field (res, 0) = v;
   CAMLreturn (res);
 }

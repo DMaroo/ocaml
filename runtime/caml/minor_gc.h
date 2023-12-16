@@ -76,12 +76,13 @@ void caml_alloc_minor_tables (void);
              Wosize_hd(hd) <= Max_young_wosize &&  \
              Color_hd(hd) == 0)
 
-#define Oldify(p) do{ \
-    value __oldify__v__ = *p; \
-    if (Is_block (__oldify__v__) && Is_young (__oldify__v__)){ \
-      caml_oldify_one (__oldify__v__, (p)); \
-    } \
-  }while(0)
+#define Oldify(p) do { } while(0)
+/* #define Oldify(p) do{ \
+//     value __oldify__v__ = *p; \
+//     if (Is_block (__oldify__v__) && Is_young (__oldify__v__)){ \
+//     //   caml_oldify_one (__oldify__v__, (p)); \
+//     // } \
+//   }while(0) */
 
 Caml_inline void add_to_ref_table (struct caml_ref_table *tbl, value *p)
 {

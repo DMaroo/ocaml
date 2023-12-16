@@ -33,7 +33,7 @@ void caml_init_domain ()
 
   Caml_state->exception_pointer = NULL;
 
-  Caml_state->old_minor_heap_wsz = NULL;
+  // Caml_state->old_minor_heap_wsz = NULL;
 
   caml_alloc_minor_tables();
 

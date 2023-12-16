@@ -58,7 +58,7 @@ CAMLexport value caml_alloc (mlsize_t wosize, tag_t tag)
   return result;
 }
 
-// CAMLexport value caml_alloc_small (mlsize_t wosize, tag_t tag)
+// CAMLexport value caml_small_alloc (mlsize_t wosize, tag_t tag)
 // {
 //   CAMLassert (wosize > 0);
 //   // CAMLassert (wosize <= Max_young_wosize);
@@ -268,7 +268,7 @@ CAMLprim value caml_update_dummy(value dummy, value newval)
 CAMLexport value caml_alloc_some(value v)
 {
   CAMLparam1(v);
-  value some = caml_alloc_small(1, 0);
+  value some = caml_alloc(1, 0);
   Field(some, 0) = v;
   CAMLreturn(some);
 }

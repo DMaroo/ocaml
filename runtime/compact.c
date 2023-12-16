@@ -466,7 +466,7 @@ void caml_compact_heap_maybe (double previous_overhead)
 {
   CAMLassert (caml_gc_phase == Phase_idle);
   if (caml_percent_max >= 1000000) return;
-  if (Caml_state->stat_major_collections < 3) return;
+  if (Caml_state->stat_collections < 3) return;
   if (Caml_state->stat_heap_wsz <= 2 * caml_clip_heap_chunk_wsz (0)) return;
 
 #ifdef HAS_HUGE_PAGES
@@ -483,7 +483,7 @@ void caml_compact_heap_maybe (double previous_overhead)
     caml_gc_message
       (0x1, "Finishing major GC cycle (triggered by compaction)\n");
     caml_finish_major_cycle ();
-    ++ Caml_state->stat_forced_major_collections;
+    ++ Caml_state->stat_forced_collections;
 
     /* Note: There is no floating garbage because we just did a complete
        major cycle*/

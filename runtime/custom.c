@@ -41,11 +41,11 @@ static value alloc_custom_gen (struct custom_operations * ops,
 
   /* [mem] is the total amount of out-of-heap memory, [mem_minor] is how much
      of it should be counted against [max_minor]. */
-  CAMLassert (mem_minor <= mem);
+  // CAMLassert (mem_minor <= mem);
 
   wosize = 1 + (bsz + sizeof(value) - 1) / sizeof(value);
   // if (wosize <= Max_young_wosize) {
-  //   result = caml_alloc_small(wosize, Custom_tag);
+  //   result = caml_alloc(wosize, Custom_tag);
   //   Custom_ops_val(result) = ops;
   //   if (ops->finalize != NULL || mem != 0) {
   //     if (mem > mem_minor) {

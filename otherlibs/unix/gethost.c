@@ -71,7 +71,7 @@ static value alloc_host_entry(struct hostent *entry)
     entry_h_length = entry->h_length;
     addr_list =
       caml_alloc_array(alloc_one_addr, (const char**)entry->h_addr_list);
-    res = caml_alloc_small(4, 0);
+    res = caml_alloc(4, 0);
     Field(res, 0) = name;
     Field(res, 1) = aliases;
     switch (entry->h_addrtype) {

@@ -185,14 +185,15 @@ Caml_inline void caml_ephe_clean_partial (value v,
             /* Do not short-circuit the pointer. */
           }else{
             Field (v, i) = child = f;
-            if (Is_block (f) && Is_young (f))
-              add_to_ephe_ref_table(Caml_state_field(ephe_ref_table), v, i);
+            /* if (Is_block (f) && Is_young (f))
+            //   add_to_ephe_ref_table(Caml_state_field(ephe_ref_table), v, i); */
             goto ephemeron_again;
           }
         }
       }
       if (Tag_val (child) == Infix_tag) child -= Infix_offset_val (child);
-      if (Is_white_val (child) && !Is_young (child)){
+      // if (Is_white_val (child) && !Is_young (child)){
+      if (Is_white_val (child)){
         release_data = 1;
         Field (v, i) = caml_ephe_none;
       }

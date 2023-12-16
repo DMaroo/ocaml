@@ -575,10 +575,10 @@ static void intern_rec(value *dest)
                                    intern_color);
         Custom_ops_val(v) = ops;
 
-        if (ops->finalize != NULL && Is_young(v)) {
-          /* Remember that the block has a finalizer. */
-          add_to_custom_table (Caml_state->custom_table, v, 0, 1);
-        }
+        // if (ops->finalize != NULL && Is_young(v)) {
+        //   /* Remember that the block has a finalizer. */
+        //   add_to_custom_table (Caml_state->custom_table, v, 0, 1);
+        // }
 
         intern_dest += 1 + size;
         break;

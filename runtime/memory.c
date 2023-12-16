@@ -491,6 +491,7 @@ Caml_inline value caml_alloc_shr_aux (mlsize_t wosize, tag_t tag, int track,
   if (caml_allocated_words > Caml_state->old_minor_heap_wsz){
     CAML_EV_COUNTER (EV_C_REQUEST_MAJOR_ALLOC_SHR, 1);
     caml_request_major_slice ();
+  }
 #ifdef DEBUG
   {
     uintnat i;
@@ -507,9 +508,9 @@ Caml_inline value caml_alloc_shr_aux (mlsize_t wosize, tag_t tag, int track,
 Caml_inline value check_oom(value v)
 {
   if (v == 0) {
-    if (Caml_state->in_minor_collection)
-      caml_fatal_error ("out of memory");
-    else
+    // if (Caml_state->in_minor_collection)
+    //   caml_fatal_error ("out of memory");
+    // else
       caml_raise_out_of_memory ();
   }
   return v;
@@ -592,10 +593,10 @@ CAMLexport void caml_adjust_gc_speed (mlsize_t res, mlsize_t max)
 CAMLexport CAMLweakdef void caml_initialize (value *fp, value val)
 {
   CAMLassert(Is_in_heap_or_young(fp));
-  *fp = val;
-  if (!Is_young((value)fp) && Is_block (val) && Is_young (val)) {
-    add_to_ref_table (Caml_state->ref_table, fp);
-  }
+  // *fp = val;
+  // if (!Is_young((value)fp) && Is_block (val) && Is_young (val)) {
+  //   add_to_ref_table (Caml_state->ref_table, fp);
+  // }
 }
 
 /* You must use [caml_modify] to change a field of an existing shared block,
@@ -627,11 +628,11 @@ CAMLexport CAMLweakdef void caml_modify (value *fp, value val)
   */
   value old;
 
-  if (Is_young((value)fp)) {
-    /* The modified object resides in the minor heap.
-       Conditions 1 and 2 cannot occur. */
-    *fp = val;
-  } else {
+  // if (Is_young((value)fp)) {
+  //   /* The modified object resides in the minor heap.
+  //      Conditions 1 and 2 cannot occur. */
+  //   *fp = val;
+  // } else {
     /* The modified object resides in the major heap. */
     CAMLassert(Is_in_heap(fp));
     old = *fp;
@@ -640,16 +641,16 @@ CAMLexport CAMLweakdef void caml_modify (value *fp, value val)
       /* If [old] is a pointer within the minor heap, we already
          have a major->minor pointer and [fp] is already in the
          remembered set.  Conditions 1 and 2 cannot occur. */
-      if (Is_young(old)) return;
+      // if (Is_young(old)) return;
       /* Here, [old] can be a pointer within the major heap.
          Check for condition 2. */
       if (caml_gc_phase == Phase_mark) caml_darken(old, NULL);
     }
     /* Check for condition 1. */
-    if (Is_block(val) && Is_young(val)) {
-      add_to_ref_table (Caml_state->ref_table, fp);
-    }
-  }
+    // if (Is_block(val) && Is_young(val)) {
+    //   add_to_ref_table (Caml_state->ref_table, fp);
+    // }
+  // }
 }
 
 

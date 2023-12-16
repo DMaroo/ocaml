@@ -122,19 +122,19 @@ void caml_alloc_custom_table (struct caml_custom_table *tbl, asize_t sz,
                        sizeof (struct caml_custom_elt));
 }
 
-static void reset_table (struct generic_table *tbl)
-{
-  tbl->size = 0;
-  tbl->reserve = 0;
-  if (tbl->base != NULL) caml_stat_free (tbl->base);
-  tbl->base = tbl->ptr = tbl->threshold = tbl->limit = tbl->end = NULL;
-}
+// static void reset_table (struct generic_table *tbl)
+// {
+//   tbl->size = 0;
+//   tbl->reserve = 0;
+//   if (tbl->base != NULL) caml_stat_free (tbl->base);
+//   tbl->base = tbl->ptr = tbl->threshold = tbl->limit = tbl->end = NULL;
+// }
 
-static void clear_table (struct generic_table *tbl)
-{
-    tbl->ptr = tbl->base;
-    tbl->limit = tbl->threshold;
-}
+// static void clear_table (struct generic_table *tbl)
+// {
+//     tbl->ptr = tbl->base;
+//     tbl->limit = tbl->threshold;
+// }
 
 // void caml_set_minor_heap_size (asize_t bsz)
 // {
@@ -409,7 +409,7 @@ void caml_gc_dispatch (void)
 /* Called by young allocations when [Caml_state->young_ptr] reaches
    [Caml_state->young_limit]. We may have to either call memprof or
    the gc. */
-// void caml_alloc_small_dispatch (intnat wosize, int flags,
+// void caml_alloc_dispatch (intnat wosize, int flags,
 //                                 int nallocs, unsigned char* encoded_alloc_lens)
 // {
 //   intnat whsize = Whsize_wosize (wosize);
@@ -502,7 +502,7 @@ static void realloc_generic_table
   }else{
     asize_t sz;
     asize_t cur_ptr = tbl->ptr - tbl->base;
-    CAMLassert (Caml_state->requested_minor_gc);
+    // CAMLassert (Caml_state->requested_minor_gc);
 
     tbl->size *= 2;
     sz = (tbl->size + tbl->reserve) * element_size;

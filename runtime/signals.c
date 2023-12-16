@@ -122,7 +122,7 @@ void caml_set_action_pending(void)
    - via caml_something_to_do, processed in
      caml_process_pending_actions_exn.
    - by playing with the allocation limit, processed in
-     caml_garbage_collection and caml_alloc_small_dispatch.
+     caml_garbage_collection and caml_alloc_dispatch.
 */
 
 CAMLno_tsan
@@ -451,7 +451,7 @@ CAMLprim value caml_install_signal_handler(value signal_number, value action)
     res = Val_int(1);
     break;
   case 2:                       /* was Signal_handle */
-    res = caml_alloc_small (1, 0);
+    res = caml_alloc (1, 0);
     Field(res, 0) = Field(caml_signal_handlers, sig);
     break;
   default:                      /* error in caml_set_signal_action */

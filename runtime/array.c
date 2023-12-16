@@ -70,7 +70,7 @@ CAMLprim value caml_floatarray_get(value array, value index)
   d = Double_flat_field(array, idx);
 #define Setup_for_gc
 #define Restore_after_gc
-  Alloc_small(res, Double_wosize, Double_tag);
+  res = caml_alloc(Double_wosize, Double_tag);
 #undef Setup_for_gc
 #undef Restore_after_gc
   Store_double_val(res, d);
@@ -133,7 +133,7 @@ CAMLprim value caml_floatarray_unsafe_get(value array, value index)
   d = Double_flat_field(array, idx);
 #define Setup_for_gc
 #define Restore_after_gc
-  Alloc_small(res, Double_wosize, Double_tag);
+  res = caml_alloc(Double_wosize, Double_tag);
 #undef Setup_for_gc
 #undef Restore_after_gc
   Store_double_val(res, d);
@@ -232,7 +232,7 @@ CAMLprim value caml_make_vect(value len, value init)
 #endif
   } else {
     // if (size <= Max_young_wosize) {
-    //   res = caml_alloc_small(size, 0);
+    //   res = caml_alloc(size, 0);
     //   for (i = 0; i < size; i++) Field(res, i) = init;
     // }
     // else
@@ -297,7 +297,7 @@ CAMLprim value caml_make_array(value init)
     } else {
       wsize = size * Double_wosize;
       // if (wsize <= Max_young_wosize) {
-      //   res = caml_alloc_small(wsize, Double_array_tag);
+      //   res = caml_alloc(wsize, Double_array_tag);
       // } else {
       res = caml_alloc_shr(wsize, Double_array_tag);
       // }
@@ -337,16 +337,16 @@ CAMLprim value caml_array_blit(value a1, value ofs1, value a2, value ofs2,
     return caml_floatarray_blit(a1, ofs1, a2, ofs2, n);
 #endif
   CAMLassert (Tag_val(a2) != Double_array_tag);
-  if (Is_young(a2)) {
-    /* Arrays of values, destination is in young generation.
-       Here too we can do a direct copy since this cannot create
-       old-to-young pointers, nor mess up with the incremental major GC.
-       Again, memmove takes care of overlap. */
-    memmove(&Field(a2, Long_val(ofs2)),
-            &Field(a1, Long_val(ofs1)),
-            Long_val(n) * sizeof(value));
-    return Val_unit;
-  }
+  // if (Is_young(a2)) {
+  //   /* Arrays of values, destination is in young generation.
+  //      Here too we can do a direct copy since this cannot create
+  //      old-to-young pointers, nor mess up with the incremental major GC.
+  //      Again, memmove takes care of overlap. */
+  //   memmove(&Field(a2, Long_val(ofs2)),
+  //           &Field(a1, Long_val(ofs1)),
+  //           Long_val(n) * sizeof(value));
+  //   return Val_unit;
+  // }
   /* Array of values, destination is in old generation.
      We must use caml_modify.  */
   count = Long_val(n);
@@ -419,7 +419,7 @@ static value caml_array_gather(intnat num_arrays,
   // else if (size <= Max_young_wosize) {
   //   /* Array of values, small enough to fit in young generation.
   //      We can use memcpy directly. */
-  //   res = caml_alloc_small(size, 0);
+  //   res = caml_alloc(size, 0);
   //   for (i = 0, pos = 0; i < num_arrays; i++) {
   //     memcpy(&Field(res, pos),
   //            &Field(arrays[i], offsets[i]),

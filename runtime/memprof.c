@@ -364,22 +364,22 @@ static value capture_callstack_postponed()
    [caml_alloc], which is more efficient since it uses the minor
    heap.
    Should be called with [local->suspended == 1] */
-static value capture_callstack(int alloc_idx)
-{
-  value res;
-  intnat callstack_len =
-    caml_collect_current_callstack(&callstack_buffer, &callstack_buffer_len,
-                                   callstack_size, alloc_idx);
-  CAMLassert(local->suspended);
-  res = caml_alloc(callstack_len, 0);
-  memcpy(Op_val(res), callstack_buffer, sizeof(value) * callstack_len);
-  if (callstack_buffer_len > 256 && callstack_buffer_len > callstack_len * 8) {
-    caml_stat_free(callstack_buffer);
-    callstack_buffer = NULL;
-    callstack_buffer_len = 0;
-  }
-  return res;
-}
+// static value capture_callstack(int alloc_idx)
+// {
+//   value res;
+//   intnat callstack_len =
+//     caml_collect_current_callstack(&callstack_buffer, &callstack_buffer_len,
+//                                    callstack_size, alloc_idx);
+//   CAMLassert(local->suspended);
+//   res = caml_alloc(callstack_len, 0);
+//   memcpy(Op_val(res), callstack_buffer, sizeof(value) * callstack_len);
+//   if (callstack_buffer_len > 256 && callstack_buffer_len > callstack_len * 8) {
+//     caml_stat_free(callstack_buffer);
+//     callstack_buffer = NULL;
+//     callstack_buffer_len = 0;
+//   }
+//   return res;
+// }
 
 /**** Managing data structures for tracked blocks. ****/
 
@@ -513,7 +513,7 @@ static value run_alloc_callback_exn(uintnat t_idx)
   value sample_info;
 
   CAMLassert(Is_block(t->block) || Is_placeholder(t->block) || t->deallocated);
-  sample_info = caml_alloc_small(4, 0);
+  sample_info = caml_alloc(4, 0);
   Field(sample_info, 0) = Val_long(t->n_samples);
   Field(sample_info, 1) = Val_long(t->wosize);
   Field(sample_info, 2) = Val_long(t->source);
@@ -640,20 +640,20 @@ static void entry_arrays_iter(ea_action f, void *data)
   caml_memprof_th_ctx_iter_hook(call_on_entry_array, &closure);
 }
 
-static void entry_array_oldify_young_roots(struct entry_array *ea, void *data)
-{
-  uintnat i;
-  (void)data;
-  /* This loop should always have a small number of iterations (when
-     compared to the size of the minor heap), because the young_idx
-     pointer should always be close to the end of the array. Indeed,
-     it is only moved back when returning from a callback triggered by
-     allocation or promotion, which can only happen for blocks
-     allocated recently, which are close to the end of the
-     [entries_global] array. */
-  for (i = ea->young_idx; i < ea->len; i++)
-    caml_oldify_one(ea->t[i].user_data, &ea->t[i].user_data);
-}
+// static void entry_array_oldify_young_roots(struct entry_array *ea, void *data)
+// {
+//   uintnat i;
+//   (void)data;
+//   /* This loop should always have a small number of iterations (when
+//      compared to the size of the minor heap), because the young_idx
+//      pointer should always be close to the end of the array. Indeed,
+//      it is only moved back when returning from a callback triggered by
+//      allocation or promotion, which can only happen for blocks
+//      allocated recently, which are close to the end of the
+//      [entries_global] array. */
+//   for (i = ea->young_idx; i < ea->len; i++)
+//     caml_oldify_one(ea->t[i].user_data, &ea->t[i].user_data);
+// }
 
 // void caml_memprof_oldify_young_roots(void)
 // {
@@ -667,9 +667,9 @@ static void entry_array_minor_update(struct entry_array *ea, void *data)
   /* See comment in [entry_array_oldify_young_roots] for the number
      of iterations of this loop. */
   for (i = ea->young_idx; i < ea->len; i++) {
-    struct tracked *t = &ea->t[i];
-    CAMLassert(Is_block(t->block) || t->deleted || t->deallocated ||
-               Is_placeholder(t->block));
+    // struct tracked *t = &ea->t[i];
+    // CAMLassert(Is_block(t->block) || t->deleted || t->deallocated ||
+              //  Is_placeholder(t->block));
     // if (Is_block(t->block) && Is_young(t->block)) {
     //   if (Hd_val(t->block) == 0) {
     //     /* Block has been promoted */
@@ -717,7 +717,8 @@ static void entry_array_clean_phase(struct entry_array *ea, void* data)
   (void)data;
   for (i = 0; i < ea->len; i++) {
     struct tracked *t = &ea->t[i];
-    if (Is_block(t->block) && !Is_young(t->block)) {
+    // if (Is_block(t->block) && !Is_young(t->block)) {
+    if (Is_block(t->block)) {
       CAMLassert(Is_in_heap(t->block));
       CAMLassert(!t->alloc_young || t->promoted);
       if (Is_white_val(t->block)) {
@@ -759,7 +760,8 @@ static void maybe_track_block(value block, uintnat n_samples,
   callstack = capture_callstack_postponed();
   if (callstack == 0) return;
 
-  new_tracked(n_samples, wosize, src, Is_young(block), block, callstack);
+  // new_tracked(n_samples, wosize, src, Is_young(block), block, callstack);
+  new_tracked(n_samples, wosize, src, 0, block, callstack);
   check_action_pending();
 }
 
@@ -774,11 +776,11 @@ void caml_memprof_track_alloc_shr(value block)
 
 void caml_memprof_track_custom(value block, mlsize_t bytes)
 {
-  CAMLassert(Is_young(block) || Is_in_heap(block));
-  if (lambda == 0 || local->suspended) return;
+  // CAMLassert(Is_young(block) || Is_in_heap(block));
+  // if (lambda == 0 || local->suspended) return;
 
-  maybe_track_block(block, rand_binom(Wsize_bsize(bytes)),
-                    Wsize_bsize(bytes), SRC_CUSTOM);
+  // maybe_track_block(block, rand_binom(Wsize_bsize(bytes)),
+  //                   Wsize_bsize(bytes), SRC_CUSTOM);
 }
 
 /* Shifts the next sample in the minor heap by [n] words. Essentially,
@@ -976,7 +978,7 @@ void caml_memprof_track_interned(header_t* block, header_t* blockend)
 {
   header_t *p;
   value callstack = 0;
-  int is_young = Is_young(Val_hp(block));
+  // int is_young = Is_young(Val_hp(block));
 
   if (lambda == 0 || local->suspended) return;
 
@@ -999,7 +1001,7 @@ void caml_memprof_track_interned(header_t* block, header_t* blockend)
     if (callstack == 0) callstack = capture_callstack_postponed();
     if (callstack == 0) break;  /* OOM */
     new_tracked(rand_binom(next_p - next_sample_p) + 1,
-                Wosize_hp(p), SRC_MARSHAL, is_young, Val_hp(p), callstack);
+                Wosize_hp(p), SRC_MARSHAL, 0, Val_hp(p), callstack);
     p = next_p;
   }
   check_action_pending();

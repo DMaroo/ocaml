@@ -37,7 +37,7 @@ static value alloc_passwd_entry(struct passwd *entry)
 #endif
     dir = caml_copy_string(entry->pw_dir);
     shell = caml_copy_string(entry->pw_shell);
-    res = caml_alloc_small(7, 0);
+    res = caml_alloc(7, 0);
     Field(res,0) = name;
     Field(res,1) = passwd;
     Field(res,2) = Val_int(entry->pw_uid);

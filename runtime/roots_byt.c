@@ -63,7 +63,7 @@ void caml_oldify_local_roots (void)
   /* Finalised values */
   // caml_final_oldify_young_roots ();
   /* Memprof */
-  caml_memprof_oldify_young_roots ();
+  // caml_memprof_oldify_young_roots ();
   /* Hook */
   if (caml_scan_roots_hook != NULL) (*caml_scan_roots_hook)(&caml_oldify_one);
 }
