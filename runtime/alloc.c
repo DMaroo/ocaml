@@ -39,35 +39,32 @@ CAMLexport value caml_alloc (mlsize_t wosize, tag_t tag)
 
   CAMLassert (tag < 256);
   CAMLassert (tag != Infix_tag);
-  if (wosize <= Max_young_wosize){
-    if (wosize == 0){
-      result = Atom (tag);
-    }else{
-      Alloc_small (result, wosize, tag);
-      if (tag < No_scan_tag){
-        for (i = 0; i < wosize; i++) Field (result, i) = Val_unit;
-      }
-    }
-  }else{
-    result = caml_alloc_shr (wosize, tag);
-    if (tag < No_scan_tag){
-      for (i = 0; i < wosize; i++) Field (result, i) = Val_unit;
-    }
-    result = caml_check_urgent_gc (result);
+  // if (wosize <= Max_young_wosize){
+  //   if (wosize == 0){
+  //     result = Atom (tag);
+  //   }else{
+  //     Alloc_small (result, wosize, tag);
+  //     if (tag < No_scan_tag){
+  //       for (i = 0; i < wosize; i++) Field (result, i) = Val_unit;
+  //     }
+  //   }
+  // }else{
+  result = caml_alloc_shr (wosize, tag);
+  if (tag < No_scan_tag){
+    for (i = 0; i < wosize; i++) Field (result, i) = Val_unit;
   }
+  result = caml_check_urgent_gc (result);
+  // }
   return result;
 }
 
-CAMLexport value caml_alloc_small (mlsize_t wosize, tag_t tag)
-{
-  value result;
-
-  CAMLassert (wosize > 0);
-  CAMLassert (wosize <= Max_young_wosize);
-  CAMLassert (tag < 256);
-  Alloc_small (result, wosize, tag);
-  return result;
-}
+// CAMLexport value caml_alloc_small (mlsize_t wosize, tag_t tag)
+// {
+//   CAMLassert (wosize > 0);
+//   // CAMLassert (wosize <= Max_young_wosize);
+//   CAMLassert (tag < 256);
+//   return caml_alloc (wosize, tag);
+// }
 
 /* [n] is a number of words (fields) */
 CAMLexport value caml_alloc_tuple(mlsize_t n)
@@ -82,12 +79,12 @@ CAMLexport value caml_alloc_string (mlsize_t len)
   mlsize_t offset_index;
   mlsize_t wosize = (len + sizeof (value)) / sizeof (value);
 
-  if (wosize <= Max_young_wosize) {
-    Alloc_small (result, wosize, String_tag);
-  }else{
-    result = caml_alloc_shr (wosize, String_tag);
-    result = caml_check_urgent_gc (result);
-  }
+  // if (wosize <= Max_young_wosize) {
+  //   Alloc_small (result, wosize, String_tag);
+  // }else{
+  result = caml_alloc_shr (wosize, String_tag);
+  result = caml_check_urgent_gc (result);
+  // }
   Field (result, wosize - 1) = 0;
   offset_index = Bsize_wsize (wosize) - 1;
   Byte (result, offset_index) = offset_index - len;
@@ -151,15 +148,15 @@ value caml_alloc_float_array(mlsize_t len)
   /* For consistency with [caml_make_vect], which can't tell whether it should
      create a float array or not when the size is zero, the tag is set to
      zero when the size is zero. */
-  if (wosize <= Max_young_wosize){
-    if (wosize == 0)
-      return Atom(0);
-    else
-      Alloc_small (result, wosize, Double_array_tag);
-  }else {
-    result = caml_alloc_shr (wosize, Double_array_tag);
-    result = caml_check_urgent_gc (result);
-  }
+  // if (wosize <= Max_young_wosize){
+  //   if (wosize == 0)
+  //     return Atom(0);
+  //   else
+  //     Alloc_small (result, wosize, Double_array_tag);
+  // }else {
+  result = caml_alloc_shr (wosize, Double_array_tag);
+  result = caml_check_urgent_gc (result);
+  // }
   return result;
 #else
   return caml_alloc (len, 0);

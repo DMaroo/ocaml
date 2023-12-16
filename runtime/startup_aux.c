@@ -72,14 +72,12 @@ void caml_init_atom_table(void)
 
 uintnat caml_init_percent_free = Percent_free_def;
 uintnat caml_init_max_percent_free = Max_percent_free_def;
-uintnat caml_init_minor_heap_wsz = Minor_heap_def;
+uintnat caml_init_old_minor_heap_wsz = Old_minor_heap_def;
 uintnat caml_init_heap_chunk_sz = Heap_chunk_def;
 uintnat caml_init_heap_wsz = Init_heap_def;
 uintnat caml_init_max_stack_wsz = Max_stack_def;
-uintnat caml_init_major_window = Major_window_def;
-uintnat caml_init_custom_major_ratio = Custom_major_ratio_def;
-uintnat caml_init_custom_minor_ratio = Custom_minor_ratio_def;
-uintnat caml_init_custom_minor_max_bsz = Custom_minor_max_bsz_def;
+uintnat caml_init_gc_window = Gc_window_def;
+uintnat caml_init_custom_gc_ratio = Custom_gc_ratio_def;
 uintnat caml_init_policy = Allocation_policy_def;
 extern int caml_parser_trace;
 uintnat caml_trace_level = 0;
@@ -117,17 +115,15 @@ void caml_parse_ocamlrunparam(void)
       case 'H': scanmult (opt, &caml_use_huge_pages); break;
       case 'i': scanmult (opt, &caml_init_heap_chunk_sz); break;
       case 'l': scanmult (opt, &caml_init_max_stack_wsz); break;
-      case 'M': scanmult (opt, &caml_init_custom_major_ratio); break;
-      case 'm': scanmult (opt, &caml_init_custom_minor_ratio); break;
-      case 'n': scanmult (opt, &caml_init_custom_minor_max_bsz); break;
+      case 'M': scanmult (opt, &caml_init_custom_gc_ratio); break;
       case 'o': scanmult (opt, &caml_init_percent_free); break;
       case 'O': scanmult (opt, &caml_init_max_percent_free); break;
       case 'p': scanmult (opt, &p); caml_parser_trace = (p != 0); break;
       case 'R': break; /*  see stdlib/hashtbl.mli */
-      case 's': scanmult (opt, &caml_init_minor_heap_wsz); break;
+      case 's': scanmult (opt, &caml_init_old_minor_heap_wsz); break;
       case 't': scanmult (opt, &caml_trace_level); break;
       case 'v': scanmult (opt, &caml_verb_gc); break;
-      case 'w': scanmult (opt, &caml_init_major_window); break;
+      case 'w': scanmult (opt, &caml_init_gc_window); break;
       case 'W': scanmult (opt, &caml_runtime_warnings); break;
       case ',': continue;
       }

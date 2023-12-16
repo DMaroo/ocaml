@@ -624,25 +624,25 @@ static void intern_alloc(mlsize_t whsize, mlsize_t num_objects)
     CAMLassert (intern_block == 0);
   } else {
     /* this is a specialised version of caml_alloc from alloc.c */
-    if (wosize <= Max_young_wosize){
-      if (wosize == 0){
-        intern_block = Atom (String_tag);
-      }else{
-#define Setup_for_gc
-#define Restore_after_gc
-        Alloc_small_no_track(intern_block, wosize, String_tag);
-#undef Setup_for_gc
-#undef Restore_after_gc
-      }
-    }else{
-      intern_block = caml_alloc_shr_no_track_noexc (wosize, String_tag);
-      /* do not do the urgent_gc check here because it might darken
-         intern_block into gray and break the intern_color assertion below */
-      if (intern_block == 0) {
-        intern_cleanup();
-        caml_raise_out_of_memory();
-      }
+//     if (wosize <= Max_young_wosize){
+//       if (wosize == 0){
+//         intern_block = Atom (String_tag);
+//       }else{
+// #define Setup_for_gc
+// #define Restore_after_gc
+//         Alloc_small_no_track(intern_block, wosize, String_tag);
+// #undef Setup_for_gc
+// #undef Restore_after_gc
+//       }
+//     }else{
+    intern_block = caml_alloc_shr_no_track_noexc (wosize, String_tag);
+    /* do not do the urgent_gc check here because it might darken
+       intern_block into gray and break the intern_color assertion below */
+    if (intern_block == 0) {
+      intern_cleanup();
+      caml_raise_out_of_memory();
     }
+    // }
     intern_header = Hd_val(intern_block);
     intern_color = Color_hd(intern_header);
     CAMLassert (intern_color == Caml_white || intern_color == Caml_black);

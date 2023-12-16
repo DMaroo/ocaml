@@ -31,20 +31,10 @@ void caml_init_domain ()
   if (Caml_state == NULL)
     caml_fatal_error ("cannot initialize domain state");
 
-  Caml_state->young_limit = NULL;
   Caml_state->exception_pointer = NULL;
 
-  Caml_state->young_ptr = NULL;
-  Caml_state->young_base = NULL;
-  Caml_state->young_start = NULL;
-  Caml_state->young_end = NULL;
-  Caml_state->young_alloc_start = NULL;
-  Caml_state->young_alloc_mid = NULL;
-  Caml_state->young_alloc_end = NULL;
-  Caml_state->young_trigger = NULL;
-  Caml_state->minor_heap_wsz = 0;
-  Caml_state->in_minor_collection = 0;
-  Caml_state->extra_heap_resources_minor = 0;
+  Caml_state->old_minor_heap_wsz = NULL;
+
   caml_alloc_minor_tables();
 
   Caml_state->stack_low = NULL;
@@ -61,15 +51,10 @@ void caml_init_domain ()
   Caml_state->last_return_address = 1; /* not in OCaml code initially */
   Caml_state->gc_regs = NULL;
 
-  Caml_state->stat_minor_words = 0.0;
-  Caml_state->stat_promoted_words = 0.0;
-  Caml_state->stat_major_words = 0.0;
-  Caml_state->stat_minor_collections = 0;
-  Caml_state->stat_major_collections = 0;
   Caml_state->stat_heap_wsz = 0;
   Caml_state->stat_top_heap_wsz = 0;
   Caml_state->stat_compactions = 0;
-  Caml_state->stat_forced_major_collections = 0;
+  Caml_state->stat_forced_collections = 0;
   Caml_state->stat_heap_chunks = 0;
 
   Caml_state->backtrace_active = 0;
@@ -79,8 +64,7 @@ void caml_init_domain ()
 
   Caml_state->compare_unordered = 0;
   Caml_state->local_roots = NULL;
-  Caml_state->requested_major_slice = 0;
-  Caml_state->requested_minor_gc = 0;
+  Caml_state->requested_gc = 1;
 
   Caml_state->eventlog_enabled = 0;
   Caml_state->eventlog_paused = 0;

@@ -14,23 +14,13 @@
 /*                                                                        */
 /**************************************************************************/
 
-DOMAIN_STATE(value*, young_limit)
-DOMAIN_STATE(value*, young_ptr)
 /* Minor heap limit. See minor_gc.c. */
 
 DOMAIN_STATE(char*, exception_pointer)
 /* Exception pointer that points into the current stack */
 
-DOMAIN_STATE(void*, young_base)
-DOMAIN_STATE(value*, young_start)
-DOMAIN_STATE(value*, young_end)
-DOMAIN_STATE(value*, young_alloc_start)
-DOMAIN_STATE(value*, young_alloc_end)
-DOMAIN_STATE(value*, young_alloc_mid)
-DOMAIN_STATE(value*, young_trigger)
-DOMAIN_STATE(asize_t, minor_heap_wsz)
-DOMAIN_STATE(intnat, in_minor_collection)
-DOMAIN_STATE(double, extra_heap_resources_minor)
+DOMAIN_STATE(asize_t, old_minor_heap_wsz)
+
 DOMAIN_STATE(struct caml_ref_table*, ref_table)
 DOMAIN_STATE(struct caml_ephe_ref_table*, ephe_ref_table)
 DOMAIN_STATE(struct caml_custom_table*, custom_table)
@@ -62,19 +52,15 @@ DOMAIN_STATE(value, backtrace_last_exn)
 /* See backtrace.c */
 
 DOMAIN_STATE(intnat, compare_unordered)
-DOMAIN_STATE(intnat, requested_major_slice)
-DOMAIN_STATE(intnat, requested_minor_gc)
+DOMAIN_STATE(intnat, requested_gc)
 DOMAIN_STATE(struct caml__roots_block *, local_roots)
 
-DOMAIN_STATE(double, stat_minor_words)
-DOMAIN_STATE(double, stat_promoted_words)
-DOMAIN_STATE(double, stat_major_words)
-DOMAIN_STATE(intnat, stat_minor_collections)
-DOMAIN_STATE(intnat, stat_major_collections)
+DOMAIN_STATE(double, stat_words)
+DOMAIN_STATE(intnat, stat_collections)
 DOMAIN_STATE(intnat, stat_heap_wsz)
 DOMAIN_STATE(intnat, stat_top_heap_wsz)
 DOMAIN_STATE(intnat, stat_compactions)
-DOMAIN_STATE(intnat, stat_forced_major_collections)
+DOMAIN_STATE(intnat, stat_forced_collections)
 DOMAIN_STATE(intnat, stat_heap_chunks)
 /* See gc_ctrl.c */
 

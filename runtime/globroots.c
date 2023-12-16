@@ -173,15 +173,15 @@ void caml_scan_global_roots(scanning_action f)
 
 /* Scan global roots for a minor collection */
 
-void caml_scan_global_young_roots(scanning_action f)
-{
+// void caml_scan_global_young_roots(scanning_action f)
+// {
 
-  caml_iterate_global_roots(f, &caml_global_roots);
-  caml_iterate_global_roots(f, &caml_global_roots_young);
-  /* Move young roots to old roots */
-  FOREACH_SKIPLIST_ELEMENT(e, &caml_global_roots_young, {
-      value * r = (value *) (e->key);
-      caml_insert_global_root(&caml_global_roots_old, r);
-    });
-  caml_skiplist_empty(&caml_global_roots_young);
-}
+//   caml_iterate_global_roots(f, &caml_global_roots);
+//   caml_iterate_global_roots(f, &caml_global_roots_young);
+//   /* Move young roots to old roots */
+//   FOREACH_SKIPLIST_ELEMENT(e, &caml_global_roots_young, {
+//       value * r = (value *) (e->key);
+//       caml_insert_global_root(&caml_global_roots_old, r);
+//     });
+//   caml_skiplist_empty(&caml_global_roots_young);
+// }

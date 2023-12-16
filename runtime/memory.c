@@ -488,10 +488,9 @@ Caml_inline value caml_alloc_shr_aux (mlsize_t wosize, tag_t tag, int track,
     == Make_header_with_profinfo (wosize, tag, caml_allocation_color (hp),
                                   profinfo));
   caml_allocated_words += Whsize_wosize (wosize);
-  if (caml_allocated_words > Caml_state->minor_heap_wsz){
+  if (caml_allocated_words > Caml_state->old_minor_heap_wsz){
     CAML_EV_COUNTER (EV_C_REQUEST_MAJOR_ALLOC_SHR, 1);
     caml_request_major_slice ();
-  }
 #ifdef DEBUG
   {
     uintnat i;

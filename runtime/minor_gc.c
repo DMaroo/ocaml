@@ -136,319 +136,231 @@ static void clear_table (struct generic_table *tbl)
     tbl->limit = tbl->threshold;
 }
 
-void caml_set_minor_heap_size (asize_t bsz)
-{
-  char *new_heap;
-  void *new_heap_base;
+// void caml_set_minor_heap_size (asize_t bsz)
+// {
+//   char *new_heap;
+//   void *new_heap_base;
 
-  CAMLassert (bsz >= Bsize_wsize(Minor_heap_min));
-  CAMLassert (bsz <= Bsize_wsize(Minor_heap_max));
-  CAMLassert (bsz % Page_size == 0);
-  CAMLassert (bsz % sizeof (value) == 0);
-  if (Caml_state->young_ptr != Caml_state->young_alloc_end){
-    CAML_EV_COUNTER (EV_C_FORCE_MINOR_SET_MINOR_HEAP_SIZE, 1);
-    Caml_state->requested_minor_gc = 0;
-    Caml_state->young_trigger = Caml_state->young_alloc_mid;
-    caml_update_young_limit();
-    caml_empty_minor_heap ();
-  }
-  CAMLassert (Caml_state->young_ptr == Caml_state->young_alloc_end);
-  new_heap = caml_stat_alloc_aligned_noexc(bsz, 0, &new_heap_base);
-  if (new_heap == NULL) caml_raise_out_of_memory();
-  if (caml_page_table_add(In_young, new_heap, new_heap + bsz) != 0)
-    caml_raise_out_of_memory();
+//   CAMLassert (bsz >= Bsize_wsize(Minor_heap_min));
+//   CAMLassert (bsz <= Bsize_wsize(Minor_heap_max));
+//   CAMLassert (bsz % Page_size == 0);
+//   CAMLassert (bsz % sizeof (value) == 0);
+//   if (Caml_state->young_ptr != Caml_state->young_alloc_end){
+//     CAML_EV_COUNTER (EV_C_FORCE_MINOR_SET_MINOR_HEAP_SIZE, 1);
+//     Caml_state->requested_minor_gc = 0;
+//     Caml_state->young_trigger = Caml_state->young_alloc_mid;
+//     caml_update_young_limit();
+//     caml_empty_minor_heap ();
+//   }
+//   CAMLassert (Caml_state->young_ptr == Caml_state->young_alloc_end);
+//   new_heap = caml_stat_alloc_aligned_noexc(bsz, 0, &new_heap_base);
+//   if (new_heap == NULL) caml_raise_out_of_memory();
+//   if (caml_page_table_add(In_young, new_heap, new_heap + bsz) != 0)
+//     caml_raise_out_of_memory();
 
-  if (Caml_state->young_start != NULL){
-    caml_page_table_remove(In_young, Caml_state->young_start,
-                           Caml_state->young_end);
-    caml_stat_free (Caml_state->young_base);
-  }
-  Caml_state->young_base = new_heap_base;
-  Caml_state->young_start = (value *) new_heap;
-  Caml_state->young_end = (value *) (new_heap + bsz);
-  Caml_state->young_alloc_start = Caml_state->young_start;
-  Caml_state->young_alloc_mid =
-    Caml_state->young_alloc_start + Wsize_bsize (bsz) / 2;
-  Caml_state->young_alloc_end = Caml_state->young_end;
-  /* caml_update_young_limit called by caml_memprof_renew_minor_sample */
-  Caml_state->young_trigger = Caml_state->young_alloc_start;
-  Caml_state->young_ptr = Caml_state->young_alloc_end;
-  Caml_state->minor_heap_wsz = Wsize_bsize (bsz);
-  caml_memprof_renew_minor_sample();
+//   if (Caml_state->young_start != NULL){
+//     caml_page_table_remove(In_young, Caml_state->young_start,
+//                            Caml_state->young_end);
+//     caml_stat_free (Caml_state->young_base);
+//   }
+//   Caml_state->young_base = new_heap_base;
+//   Caml_state->young_start = (value *) new_heap;
+//   Caml_state->young_end = (value *) (new_heap + bsz);
+//   Caml_state->young_alloc_start = Caml_state->young_start;
+//   Caml_state->young_alloc_mid =
+//     Caml_state->young_alloc_start + Wsize_bsize (bsz) / 2;
+//   Caml_state->young_alloc_end = Caml_state->young_end;
+//   /* caml_update_young_limit called by caml_memprof_renew_minor_sample */
+//   Caml_state->young_trigger = Caml_state->young_alloc_start;
+//   Caml_state->young_ptr = Caml_state->young_alloc_end;
+//   Caml_state->minor_heap_wsz = Wsize_bsize (bsz);
+//   caml_memprof_renew_minor_sample();
 
-  reset_table ((struct generic_table *) Caml_state->ref_table);
-  reset_table ((struct generic_table *) Caml_state->ephe_ref_table);
-  reset_table ((struct generic_table *) Caml_state->custom_table);
-}
+//   reset_table ((struct generic_table *) Caml_state->ref_table);
+//   reset_table ((struct generic_table *) Caml_state->ephe_ref_table);
+//   reset_table ((struct generic_table *) Caml_state->custom_table);
+// }
 
-static value oldify_todo_list = 0;
+// static value oldify_todo_list = 0;
 
 /* Note that the tests on the tag depend on the fact that Infix_tag,
    Forward_tag, and No_scan_tag are contiguous. */
 
-void caml_oldify_one (value v, value *p)
-{
-  value result;
-  header_t hd;
-  mlsize_t sz, i;
-  tag_t tag;
-
- tail_call:
-  if (Is_block (v) && Is_young (v)){
-    CAMLassert ((value *) Hp_val (v) >= Caml_state->young_ptr);
-    hd = Hd_val (v);
-    if (hd == 0){         /* If already forwarded */
-      *p = Field (v, 0);  /*  then forward pointer is first field. */
-    }else{
-      CAMLassert_young_header(hd);
-      tag = Tag_hd (hd);
-      if (tag < Infix_tag){
-        value field0;
-
-        sz = Wosize_hd (hd);
-        result = caml_alloc_shr_for_minor_gc (sz, tag, hd);
-        *p = result;
-        field0 = Field (v, 0);
-        Hd_val (v) = 0;            /* Set forward flag */
-        Field (v, 0) = result;     /*  and forward pointer. */
-        if (sz > 1){
-          Field (result, 0) = field0;
-          Field (result, 1) = oldify_todo_list;    /* Add this block */
-          oldify_todo_list = v;                    /*  to the "to do" list. */
-        }else{
-          CAMLassert (sz == 1);
-          p = &Field (result, 0);
-          v = field0;
-          goto tail_call;
-        }
-      }else if (tag >= No_scan_tag){
-        sz = Wosize_hd (hd);
-        result = caml_alloc_shr_for_minor_gc (sz, tag, hd);
-        for (i = 0; i < sz; i++) Field (result, i) = Field (v, i);
-        Hd_val (v) = 0;            /* Set forward flag */
-        Field (v, 0) = result;     /*  and forward pointer. */
-        *p = result;
-      }else if (tag == Infix_tag){
-        mlsize_t offset = Infix_offset_hd (hd);
-        caml_oldify_one (v - offset, p);   /* Cannot recurse deeper than 1. */
-        *p += offset;
-      }else{
-        value f = Forward_val (v);
-        tag_t ft = 0;
-        int vv = 1;
-
-        CAMLassert (tag == Forward_tag);
-        if (Is_block (f)){
-          if (Is_young (f)){
-            vv = 1;
-            ft = Tag_val (Hd_val (f) == 0 ? Field (f, 0) : f);
-          }else{
-            vv = Is_in_value_area(f);
-            if (vv){
-              ft = Tag_val (f);
-            }
-          }
-        }
-        if (!vv || ft == Forward_tag || ft == Lazy_tag
-#ifdef FLAT_FLOAT_ARRAY
-            || ft == Double_tag
-#endif
-            ){
-          /* Do not short-circuit the pointer.  Copy as a normal block. */
-          CAMLassert (Wosize_hd (hd) == 1);
-          result = caml_alloc_shr_for_minor_gc (1, Forward_tag, hd);
-          *p = result;
-          Hd_val (v) = 0;             /* Set (GC) forward flag */
-          Field (v, 0) = result;      /*  and forward pointer. */
-          p = &Field (result, 0);
-          v = f;
-          goto tail_call;
-        }else{
-          v = f;                        /* Follow the forwarding */
-          goto tail_call;               /*  then oldify. */
-        }
-      }
-    }
-  }else{
-    *p = v;
-  }
-}
-
-/* Test if the ephemeron is alive, everything outside minor heap is alive */
-Caml_inline int ephe_check_alive_data(struct caml_ephe_ref_elt *re){
-  mlsize_t i;
-  value child;
-  for (i = CAML_EPHE_FIRST_KEY; i < Wosize_val(re->ephe); i++){
-    child = Field (re->ephe, i);
-    if(child != caml_ephe_none
-       && Is_block (child) && Is_young (child)) {
-      if(Tag_val(child) == Infix_tag) child -= Infix_offset_val(child);
-      if(Hd_val (child) != 0) return 0; /* Value not copied to major heap */
-    }
-  }
-  return 1;
-}
+// /* Test if the ephemeron is alive, everything outside minor heap is alive */
+// Caml_inline int ephe_check_alive_data(struct caml_ephe_ref_elt *re){
+//   mlsize_t i;
+//   value child;
+//   for (i = CAML_EPHE_FIRST_KEY; i < Wosize_val(re->ephe); i++){
+//     child = Field (re->ephe, i);
+//     if(child != caml_ephe_none
+//        && Is_block (child) && Is_young (child)) {
+//       if(Tag_val(child) == Infix_tag) child -= Infix_offset_val(child);
+//       if(Hd_val (child) != 0) return 0; /* Value not copied to major heap */
+//     }
+//   }
+//   return 1;
+// }
 
 /* Finish the work that was put off by [caml_oldify_one].
    Note that [caml_oldify_one] itself is called by oldify_mopup, so we
    have to be careful to remove the first entry from the list before
    oldifying its fields. */
-void caml_oldify_mopup (void)
-{
-  value v, new_v, f;
-  mlsize_t i;
-  struct caml_ephe_ref_elt *re;
-  int redo;
+// void caml_oldify_mopup (void)
+// {
+//   value v, new_v, f;
+//   mlsize_t i;
+//   struct caml_ephe_ref_elt *re;
+//   int redo;
 
-  again:
-  redo = 0;
+//   again:
+//   redo = 0;
 
-  while (oldify_todo_list != 0){
-    v = oldify_todo_list;                /* Get the head. */
-    CAMLassert (Hd_val (v) == 0);            /* It must be forwarded. */
-    new_v = Field (v, 0);                /* Follow forward pointer. */
-    oldify_todo_list = Field (new_v, 1); /* Remove from list. */
+//   while (oldify_todo_list != 0){
+//     v = oldify_todo_list;                /* Get the head. */
+//     CAMLassert (Hd_val (v) == 0);            /* It must be forwarded. */
+//     new_v = Field (v, 0);                /* Follow forward pointer. */
+//     oldify_todo_list = Field (new_v, 1); /* Remove from list. */
 
-    f = Field (new_v, 0);
-    if (Is_block (f) && Is_young (f)){
-      caml_oldify_one (f, &Field (new_v, 0));
-    }
-    for (i = 1; i < Wosize_val (new_v); i++){
-      f = Field (v, i);
-      if (Is_block (f) && Is_young (f)){
-        caml_oldify_one (f, &Field (new_v, i));
-      }else{
-        Field (new_v, i) = f;
-      }
-    }
-  }
+//     f = Field (new_v, 0);
+//     if (Is_block (f) && Is_young (f)){
+//       caml_oldify_one (f, &Field (new_v, 0));
+//     }
+//     for (i = 1; i < Wosize_val (new_v); i++){
+//       f = Field (v, i);
+//       if (Is_block (f) && Is_young (f)){
+//         caml_oldify_one (f, &Field (new_v, i));
+//       }else{
+//         Field (new_v, i) = f;
+//       }
+//     }
+//   }
 
-  /* Oldify the data in the minor heap of alive ephemeron
-     During minor collection keys outside the minor heap are considered alive */
-  for (re = Caml_state->ephe_ref_table->base;
-       re < Caml_state->ephe_ref_table->ptr; re++){
-    /* look only at ephemeron with data in the minor heap */
-    if (re->offset == 1){
-      value *data = &Field(re->ephe,1), v = *data;
-      if (v != caml_ephe_none && Is_block (v) && Is_young (v)){
-        mlsize_t offs = Tag_val(v) == Infix_tag ? Infix_offset_val(v) : 0;
-        v -= offs;
-        if (Hd_val (v) == 0){ /* Value copied to major heap */
-          *data = Field (v, 0) + offs;
-        } else {
-          if (ephe_check_alive_data(re)){
-            caml_oldify_one(*data,data);
-            redo = 1; /* oldify_todo_list can still be 0 */
-          }
-        }
-      }
-    }
-  }
+//   /* Oldify the data in the minor heap of alive ephemeron
+//      During minor collection keys outside the minor heap are considered alive */
+//   for (re = Caml_state->ephe_ref_table->base;
+//        re < Caml_state->ephe_ref_table->ptr; re++){
+//     /* look only at ephemeron with data in the minor heap */
+//     if (re->offset == 1){
+//       value *data = &Field(re->ephe,1), v = *data;
+//       if (v != caml_ephe_none && Is_block (v) && Is_young (v)){
+//         mlsize_t offs = Tag_val(v) == Infix_tag ? Infix_offset_val(v) : 0;
+//         v -= offs;
+//         if (Hd_val (v) == 0){ /* Value copied to major heap */
+//           *data = Field (v, 0) + offs;
+//         } else {
+//           if (ephe_check_alive_data(re)){
+//             caml_oldify_one(*data,data);
+//             redo = 1; /* oldify_todo_list can still be 0 */
+//           }
+//         }
+//       }
+//     }
+//   }
 
-  if (redo) goto again;
-}
+//   if (redo) goto again;
+// }
 
 /* Make sure the minor heap is empty by performing a minor collection
    if needed.
 */
-void caml_empty_minor_heap (void)
-{
-  value **r;
-  struct caml_custom_elt *elt;
-  uintnat prev_alloc_words;
-  struct caml_ephe_ref_elt *re;
+// void caml_empty_minor_heap (void)
+// {
+//   value **r;
+//   struct caml_custom_elt *elt;
+//   uintnat prev_alloc_words;
+//   struct caml_ephe_ref_elt *re;
 
-  if (Caml_state->young_ptr != Caml_state->young_alloc_end){
-    CAMLassert_young_header(*(header_t*)Caml_state->young_ptr);
-    if (caml_minor_gc_begin_hook != NULL) (*caml_minor_gc_begin_hook) ();
-    prev_alloc_words = caml_allocated_words;
-    Caml_state->in_minor_collection = 1;
-    caml_gc_message (0x02, "<");
-    CAML_EV_BEGIN(EV_MINOR_LOCAL_ROOTS);
-    caml_oldify_local_roots();
-    CAML_EV_END(EV_MINOR_LOCAL_ROOTS);
-    CAML_EV_BEGIN(EV_MINOR_REF_TABLES);
-    for (r = Caml_state->ref_table->base;
-         r < Caml_state->ref_table->ptr; r++) {
-      caml_oldify_one (**r, *r);
-    }
-    CAML_EV_END(EV_MINOR_REF_TABLES);
-    CAML_EV_BEGIN(EV_MINOR_COPY);
-    caml_oldify_mopup ();
-    CAML_EV_END(EV_MINOR_COPY);
-    /* Update the ephemerons */
-    for (re = Caml_state->ephe_ref_table->base;
-         re < Caml_state->ephe_ref_table->ptr; re++){
-      if(re->offset < Wosize_val(re->ephe)){
-        /* If it is not the case, the ephemeron has been truncated */
-        value *key = &Field(re->ephe,re->offset), v = *key;
-        if (v != caml_ephe_none && Is_block (v) && Is_young (v)){
-          mlsize_t offs = Tag_val (v) == Infix_tag ? Infix_offset_val (v) : 0;
-          v -= offs;
-          if (Hd_val (v) == 0){ /* Value copied to major heap */
-            *key = Field (v, 0) + offs;
-          }else{ /* Value not copied so it's dead */
-            CAMLassert(!ephe_check_alive_data(re));
-            *key = caml_ephe_none;
-            Field(re->ephe,1) = caml_ephe_none;
-          }
-        }
-      }
-    }
-    /* Update the OCaml finalise_last values */
-    CAML_EV_BEGIN(EV_MINOR_UPDATE_WEAK);
-    caml_final_update_minor_roots();
-    /* Trigger memprofs callbacks for blocks in the minor heap. */
-    caml_memprof_minor_update();
-    /* Run custom block finalisation of dead minor values */
-    for (elt = Caml_state->custom_table->base;
-         elt < Caml_state->custom_table->ptr; elt++){
-      value v = elt->block;
-      if (Hd_val (v) == 0){
-        /* Block was copied to the major heap: adjust GC speed numbers. */
-        caml_adjust_gc_speed(elt->mem, elt->max);
-      }else{
-        /* Block will be freed: call finalization function, if any. */
-        void (*final_fun)(value) = Custom_ops_val(v)->finalize;
-        if (final_fun != NULL) final_fun(v);
-      }
-    }
-    CAML_EV_END(EV_MINOR_UPDATE_WEAK);
-    CAML_EV_BEGIN(EV_MINOR_FINALIZED);
-    Caml_state->stat_minor_words +=
-      Caml_state->young_alloc_end - Caml_state->young_ptr;
-    caml_gc_clock +=
-      (double) (Caml_state->young_alloc_end - Caml_state->young_ptr)
-      / Caml_state->minor_heap_wsz;
-    Caml_state->young_ptr = Caml_state->young_alloc_end;
-    clear_table ((struct generic_table *) Caml_state->ref_table);
-    clear_table ((struct generic_table *) Caml_state->ephe_ref_table);
-    clear_table ((struct generic_table *) Caml_state->custom_table);
-    Caml_state->extra_heap_resources_minor = 0;
-    caml_gc_message (0x02, ">");
-    Caml_state->in_minor_collection = 0;
-    caml_final_empty_young ();
-    CAML_EV_END(EV_MINOR_FINALIZED);
-    Caml_state->stat_promoted_words += caml_allocated_words - prev_alloc_words;
-    CAML_EV_COUNTER (EV_C_MINOR_PROMOTED,
-                     caml_allocated_words - prev_alloc_words);
-    ++ Caml_state->stat_minor_collections;
-    caml_memprof_renew_minor_sample();
-    if (caml_minor_gc_end_hook != NULL) (*caml_minor_gc_end_hook) ();
-  }else{
-    /* The minor heap is empty nothing to do. */
-    caml_final_empty_young ();
-  }
-#ifdef DEBUG
-  {
-    value *p;
-    for (p = Caml_state->young_alloc_start; p < Caml_state->young_alloc_end;
-         ++p) {
-      *p = Debug_free_minor;
-    }
-  }
-#endif
-}
+//   if (Caml_state->young_ptr != Caml_state->young_alloc_end){
+//     CAMLassert_young_header(*(header_t*)Caml_state->young_ptr);
+//     if (caml_minor_gc_begin_hook != NULL) (*caml_minor_gc_begin_hook) ();
+//     prev_alloc_words = caml_allocated_words;
+//     Caml_state->in_minor_collection = 1;
+//     caml_gc_message (0x02, "<");
+//     CAML_EV_BEGIN(EV_MINOR_LOCAL_ROOTS);
+//     caml_oldify_local_roots();
+//     CAML_EV_END(EV_MINOR_LOCAL_ROOTS);
+//     CAML_EV_BEGIN(EV_MINOR_REF_TABLES);
+//     for (r = Caml_state->ref_table->base;
+//          r < Caml_state->ref_table->ptr; r++) {
+//       caml_oldify_one (**r, *r);
+//     }
+//     CAML_EV_END(EV_MINOR_REF_TABLES);
+//     CAML_EV_BEGIN(EV_MINOR_COPY);
+//     caml_oldify_mopup ();
+//     CAML_EV_END(EV_MINOR_COPY);
+//     /* Update the ephemerons */
+//     for (re = Caml_state->ephe_ref_table->base;
+//          re < Caml_state->ephe_ref_table->ptr; re++){
+//       if(re->offset < Wosize_val(re->ephe)){
+//         /* If it is not the case, the ephemeron has been truncated */
+//         value *key = &Field(re->ephe,re->offset), v = *key;
+//         if (v != caml_ephe_none && Is_block (v) && Is_young (v)){
+//           mlsize_t offs = Tag_val (v) == Infix_tag ? Infix_offset_val (v) : 0;
+//           v -= offs;
+//           if (Hd_val (v) == 0){ /* Value copied to major heap */
+//             *key = Field (v, 0) + offs;
+//           }else{ /* Value not copied so it's dead */
+//             CAMLassert(!ephe_check_alive_data(re));
+//             *key = caml_ephe_none;
+//             Field(re->ephe,1) = caml_ephe_none;
+//           }
+//         }
+//       }
+//     }
+//     /* Update the OCaml finalise_last values */
+//     CAML_EV_BEGIN(EV_MINOR_UPDATE_WEAK);
+//     caml_final_update_minor_roots();
+//     /* Trigger memprofs callbacks for blocks in the minor heap. */
+//     caml_memprof_minor_update();
+//     /* Run custom block finalisation of dead minor values */
+//     for (elt = Caml_state->custom_table->base;
+//          elt < Caml_state->custom_table->ptr; elt++){
+//       value v = elt->block;
+//       if (Hd_val (v) == 0){
+//         /* Block was copied to the major heap: adjust GC speed numbers. */
+//         caml_adjust_gc_speed(elt->mem, elt->max);
+//       }else{
+//         /* Block will be freed: call finalization function, if any. */
+//         void (*final_fun)(value) = Custom_ops_val(v)->finalize;
+//         if (final_fun != NULL) final_fun(v);
+//       }
+//     }
+//     CAML_EV_END(EV_MINOR_UPDATE_WEAK);
+//     CAML_EV_BEGIN(EV_MINOR_FINALIZED);
+//     Caml_state->stat_minor_words +=
+//       Caml_state->young_alloc_end - Caml_state->young_ptr;
+//     caml_gc_clock +=
+//       (double) (Caml_state->young_alloc_end - Caml_state->young_ptr)
+//       / Caml_state->minor_heap_wsz;
+//     Caml_state->young_ptr = Caml_state->young_alloc_end;
+//     clear_table ((struct generic_table *) Caml_state->ref_table);
+//     clear_table ((struct generic_table *) Caml_state->ephe_ref_table);
+//     clear_table ((struct generic_table *) Caml_state->custom_table);
+//     Caml_state->extra_heap_resources_minor = 0;
+//     caml_gc_message (0x02, ">");
+//     Caml_state->in_minor_collection = 0;
+//     caml_final_empty_young ();
+//     CAML_EV_END(EV_MINOR_FINALIZED);
+//     Caml_state->stat_promoted_words += caml_allocated_words - prev_alloc_words;
+//     CAML_EV_COUNTER (EV_C_MINOR_PROMOTED,
+//                      caml_allocated_words - prev_alloc_words);
+//     ++ Caml_state->stat_minor_collections;
+//     caml_memprof_renew_minor_sample();
+//     if (caml_minor_gc_end_hook != NULL) (*caml_minor_gc_end_hook) ();
+//   }else{
+//     /* The minor heap is empty nothing to do. */
+//     caml_final_empty_young ();
+//   }
+// #ifdef DEBUG
+//   {
+//     value *p;
+//     for (p = Caml_state->young_alloc_start; p < Caml_state->young_alloc_end;
+//          ++p) {
+//       *p = Debug_free_minor;
+//     }
+//   }
+// #endif
+// }
 
 #ifdef CAML_INSTR
 extern uintnat caml_instr_alloc_jump;
@@ -465,13 +377,8 @@ void caml_gc_dispatch (void)
     caml_instr_alloc_jump =  0;
   });
 
-  if (Caml_state->young_trigger == Caml_state->young_alloc_start){
-    /* The minor heap is full, we must do a minor collection. */
-    Caml_state->requested_minor_gc = 1;
-  }else{
-    /* The minor heap is half-full, do a major GC slice. */
-    Caml_state->requested_major_slice = 1;
-  }
+  Caml_state->requested_gc = 1;
+
   if (caml_gc_phase == Phase_idle){
     /* The major GC needs an empty minor heap in order to start a new cycle.
        If a major slice was requested, we need to do a minor collection
@@ -480,22 +387,19 @@ void caml_gc_dispatch (void)
        a new major GC cycle.
        In either case, we have to do a minor cycle followed by a major slice.
     */
-    Caml_state->requested_minor_gc = 1;
-    Caml_state->requested_major_slice = 1;
+    Caml_state->requested_gc = 1;
   }
-  if (Caml_state->requested_minor_gc) {
-    /* reset the pointers first because the end hooks might allocate */
-    CAML_EV_BEGIN(EV_MINOR);
-    Caml_state->requested_minor_gc = 0;
-    Caml_state->young_trigger = Caml_state->young_alloc_mid;
-    caml_update_young_limit();
-    caml_empty_minor_heap ();
-    CAML_EV_END(EV_MINOR);
-  }
-  if (Caml_state->requested_major_slice) {
-    Caml_state->requested_major_slice = 0;
-    Caml_state->young_trigger = Caml_state->young_alloc_start;
-    caml_update_young_limit();
+  // if (Caml_state->requested_minor_gc) {
+  //   /* reset the pointers first because the end hooks might allocate */
+  //   CAML_EV_BEGIN(EV_MINOR);
+  //   Caml_state->requested_minor_gc = 0;
+  //   Caml_state->young_trigger = Caml_state->young_alloc_mid;
+  //   caml_update_young_limit();
+  //   caml_empty_minor_heap ();
+  //   CAML_EV_END(EV_MINOR);
+  // }
+  if (Caml_state->requested_gc) {
+    Caml_state->requested_gc = 0;
     CAML_EV_BEGIN(EV_MAJOR);
     caml_major_collection_slice (-1);
     CAML_EV_END(EV_MAJOR);
@@ -505,72 +409,72 @@ void caml_gc_dispatch (void)
 /* Called by young allocations when [Caml_state->young_ptr] reaches
    [Caml_state->young_limit]. We may have to either call memprof or
    the gc. */
-void caml_alloc_small_dispatch (intnat wosize, int flags,
-                                int nallocs, unsigned char* encoded_alloc_lens)
-{
-  intnat whsize = Whsize_wosize (wosize);
+// void caml_alloc_small_dispatch (intnat wosize, int flags,
+//                                 int nallocs, unsigned char* encoded_alloc_lens)
+// {
+//   intnat whsize = Whsize_wosize (wosize);
 
-  /* First, we un-do the allocation performed in [Alloc_small] */
-  Caml_state->young_ptr += whsize;
+//   /* First, we un-do the allocation performed in [Alloc_small] */
+//   Caml_state->young_ptr += whsize;
 
-  while(1) {
-    /* We might be here because of an async callback / urgent GC
-       request. Take the opportunity to do what has been requested. */
-    if (flags & CAML_FROM_CAML)
-      /* In the case of allocations performed from OCaml, execute
-         asynchronous callbacks. */
-      caml_raise_if_exception(caml_do_pending_actions_exn ());
-    else {
-      caml_check_urgent_gc (Val_unit);
-      /* In the case of long-running C code that regularly polls with
-         caml_process_pending_actions, force a query of all callbacks
-         at every minor collection or major slice. */
-      caml_something_to_do = 1;
-    }
+//   while(1) {
+//     /* We might be here because of an async callback / urgent GC
+//        request. Take the opportunity to do what has been requested. */
+//     if (flags & CAML_FROM_CAML)
+//       /* In the case of allocations performed from OCaml, execute
+//          asynchronous callbacks. */
+//       caml_raise_if_exception(caml_do_pending_actions_exn ());
+//     else {
+//       caml_check_urgent_gc (Val_unit);
+//       /* In the case of long-running C code that regularly polls with
+//          caml_process_pending_actions, force a query of all callbacks
+//          at every minor collection or major slice. */
+//       caml_something_to_do = 1;
+//     }
 
-    /* Now, there might be enough room in the minor heap to do our
-       allocation. */
-    if (Caml_state->young_ptr - whsize >= Caml_state->young_trigger)
-      break;
+//     /* Now, there might be enough room in the minor heap to do our
+//        allocation. */
+//     if (Caml_state->young_ptr - whsize >= Caml_state->young_trigger)
+//       break;
 
-    /* If not, then empty the minor heap, and check again for async
-       callbacks. */
-    CAML_EV_COUNTER (EV_C_FORCE_MINOR_ALLOC_SMALL, 1);
-    caml_gc_dispatch ();
-  }
+//     /* If not, then empty the minor heap, and check again for async
+//        callbacks. */
+//     CAML_EV_COUNTER (EV_C_FORCE_MINOR_ALLOC_SMALL, 1);
+//     caml_gc_dispatch ();
+//   }
 
-  /* Re-do the allocation: we now have enough space in the minor heap. */
-  Caml_state->young_ptr -= whsize;
+//   /* Re-do the allocation: we now have enough space in the minor heap. */
+//   Caml_state->young_ptr -= whsize;
 
-  /* Check if the allocated block has been sampled by memprof. */
-  if(Caml_state->young_ptr < caml_memprof_young_trigger){
-    if(flags & CAML_DO_TRACK) {
-      caml_memprof_track_young(wosize, flags & CAML_FROM_CAML,
-                               nallocs, encoded_alloc_lens);
-      /* Until the allocation actually takes place, the heap is in an invalid
-         state (see comments in [caml_memprof_track_young]). Hence, very little
-         heap operations are allowed before the actual allocation.
+//   /* Check if the allocated block has been sampled by memprof. */
+//   if(Caml_state->young_ptr < caml_memprof_young_trigger){
+//     if(flags & CAML_DO_TRACK) {
+//       caml_memprof_track_young(wosize, flags & CAML_FROM_CAML,
+//                                nallocs, encoded_alloc_lens);
+//       /* Until the allocation actually takes place, the heap is in an invalid
+//          state (see comments in [caml_memprof_track_young]). Hence, very little
+//          heap operations are allowed before the actual allocation.
 
-         Moreover, [Caml_state->young_ptr] should not be modified before the
-         allocation, because its value has been used as the pointer to
-         the sampled block.
-      */
-    } else caml_memprof_renew_minor_sample();
-  }
-}
+//          Moreover, [Caml_state->young_ptr] should not be modified before the
+//          allocation, because its value has been used as the pointer to
+//          the sampled block.
+//       */
+//     } else caml_memprof_renew_minor_sample();
+//   }
+// }
 
 /* Exported for backward compatibility with Lablgtk: do a minor
    collection to ensure that the minor heap is empty.
 */
-CAMLexport void caml_minor_collection (void)
-{
-  Caml_state->requested_minor_gc = 1;
-  caml_gc_dispatch ();
-}
+// CAMLexport void caml_minor_collection (void)
+// {
+//   Caml_state->requested_minor_gc = 1;
+//   caml_gc_dispatch ();
+// }
 
 CAMLexport value caml_check_urgent_gc (value extra_root)
 {
-  if (Caml_state->requested_major_slice || Caml_state->requested_minor_gc){
+  if (Caml_state->requested_gc){
     CAMLparam1 (extra_root);
     caml_gc_dispatch();
     CAMLdrop;
@@ -588,7 +492,7 @@ static void realloc_generic_table
   CAMLassert (tbl->limit >= tbl->threshold);
 
   if (tbl->base == NULL){
-    alloc_generic_table (tbl, Caml_state->minor_heap_wsz / 8, 256,
+    alloc_generic_table (tbl, Caml_state->old_minor_heap_wsz / 8, 256,
                          element_size);
   }else if (tbl->limit == tbl->threshold){
     CAML_EV_COUNTER (ev_counter_name, 1);

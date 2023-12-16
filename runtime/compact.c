@@ -382,7 +382,6 @@ void caml_compact_heap (intnat new_allocation_policy)
 {
   uintnat target_wsz, live;
 
-  CAMLassert (Caml_state->young_ptr == Caml_state->young_alloc_end);
   CAMLassert (Caml_state->ref_table->ptr ==
               Caml_state->ref_table->base);
   CAMLassert (Caml_state->ephe_ref_table->ptr ==

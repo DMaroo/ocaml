@@ -538,11 +538,10 @@ CAMLexport void caml_main(char_os **argv)
   /* Read the table of contents (section descriptors) */
   caml_read_section_descriptors(fd, &trail);
   /* Initialize the abstract machine */
-  caml_init_gc (caml_init_minor_heap_wsz, caml_init_heap_wsz,
+  caml_init_gc (caml_init_old_minor_heap_wsz, caml_init_heap_wsz,
                 caml_init_heap_chunk_sz, caml_init_percent_free,
-                caml_init_max_percent_free, caml_init_major_window,
-                caml_init_custom_major_ratio, caml_init_custom_minor_ratio,
-                caml_init_custom_minor_max_bsz, caml_init_policy);
+                caml_init_max_percent_free, caml_init_gc_window,
+                caml_init_custom_gc_ratio, caml_init_policy);
   caml_init_stack (caml_init_max_stack_wsz);
   caml_init_atom_table();
   caml_init_backtrace();
@@ -637,11 +636,10 @@ CAMLexport value caml_startup_code_exn(
   exe_name = caml_executable_name();
   if (exe_name == NULL) exe_name = caml_search_exe_in_path(argv[0]);
   /* Initialize the abstract machine */
-  caml_init_gc (caml_init_minor_heap_wsz, caml_init_heap_wsz,
+  caml_init_gc (caml_init_old_minor_heap_wsz, caml_init_heap_wsz,
                 caml_init_heap_chunk_sz, caml_init_percent_free,
-                caml_init_max_percent_free, caml_init_major_window,
-                caml_init_custom_major_ratio, caml_init_custom_minor_ratio,
-                caml_init_custom_minor_max_bsz, caml_init_policy);
+                caml_init_max_percent_free, caml_init_gc_window,
+                caml_init_custom_gc_ratio, caml_init_policy);
   caml_init_stack (caml_init_max_stack_wsz);
   caml_init_atom_table();
   caml_init_backtrace();

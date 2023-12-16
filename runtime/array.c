@@ -187,16 +187,17 @@ CAMLprim value caml_floatarray_create(value len)
 {
   mlsize_t wosize = Long_val(len) * Double_wosize;
   value result;
-  if (wosize <= Max_young_wosize){
-    if (wosize == 0)
-      return Atom(0);
-    else
-#define Setup_for_gc
-#define Restore_after_gc
-      Alloc_small (result, wosize, Double_array_tag);
-#undef Setup_for_gc
-#undef Restore_after_gc
-  }else if (wosize > Max_wosize)
+//   if (wosize <= Max_young_wosize){
+//     if (wosize == 0)
+//       return Atom(0);
+//     else
+// #define Setup_for_gc
+// #define Restore_after_gc
+//       Alloc_small (result, wosize, Double_array_tag);
+// #undef Setup_for_gc
+// #undef Restore_after_gc
+//   }else
+  if (wosize > Max_wosize)
     caml_invalid_argument("Float.Array.create");
   else {
     result = caml_alloc_shr (wosize, Double_array_tag);
@@ -230,19 +231,20 @@ CAMLprim value caml_make_vect(value len, value init)
     }
 #endif
   } else {
-    if (size <= Max_young_wosize) {
-      res = caml_alloc_small(size, 0);
-      for (i = 0; i < size; i++) Field(res, i) = init;
-    }
-    else if (size > Max_wosize) caml_invalid_argument("Array.make");
+    // if (size <= Max_young_wosize) {
+    //   res = caml_alloc_small(size, 0);
+    //   for (i = 0; i < size; i++) Field(res, i) = init;
+    // }
+    // else
+    if (size > Max_wosize) caml_invalid_argument("Array.make");
     else {
-      if (Is_block(init) && Is_young(init)) {
-        /* We don't want to create so many major-to-minor references,
-           so [init] is moved to the major heap by doing a minor GC. */
-        CAML_EV_COUNTER (EV_C_FORCE_MINOR_MAKE_VECT, 1);
-        caml_minor_collection ();
-      }
-      CAMLassert(!(Is_block(init) && Is_young(init)));
+      // if (Is_block(init) && Is_young(init)) {
+      //   /* We don't want to create so many major-to-minor references,
+      //      so [init] is moved to the major heap by doing a minor GC. */
+      //   CAML_EV_COUNTER (EV_C_FORCE_MINOR_MAKE_VECT, 1);
+      //   caml_minor_collection ();
+      // }
+      // CAMLassert(!(Is_block(init) && Is_young(init)));
       res = caml_alloc_shr(size, 0);
       /* We now know that [init] is not in the minor heap, so there is
          no need to call [caml_initialize]. */
@@ -294,11 +296,11 @@ CAMLprim value caml_make_array(value init)
       CAMLreturn (init);
     } else {
       wsize = size * Double_wosize;
-      if (wsize <= Max_young_wosize) {
-        res = caml_alloc_small(wsize, Double_array_tag);
-      } else {
-        res = caml_alloc_shr(wsize, Double_array_tag);
-      }
+      // if (wsize <= Max_young_wosize) {
+      //   res = caml_alloc_small(wsize, Double_array_tag);
+      // } else {
+      res = caml_alloc_shr(wsize, Double_array_tag);
+      // }
       for (i = 0; i < size; i++) {
         double d = Double_val(Field(init, i));
         Store_double_flat_field(res, i, d);
@@ -414,18 +416,18 @@ static value caml_array_gather(intnat num_arrays,
     CAMLassert(pos == size);
   }
 #endif
-  else if (size <= Max_young_wosize) {
-    /* Array of values, small enough to fit in young generation.
-       We can use memcpy directly. */
-    res = caml_alloc_small(size, 0);
-    for (i = 0, pos = 0; i < num_arrays; i++) {
-      memcpy(&Field(res, pos),
-             &Field(arrays[i], offsets[i]),
-             lengths[i] * sizeof(value));
-      pos += lengths[i];
-    }
-    CAMLassert(pos == size);
-  }
+  // else if (size <= Max_young_wosize) {
+  //   /* Array of values, small enough to fit in young generation.
+  //      We can use memcpy directly. */
+  //   res = caml_alloc_small(size, 0);
+  //   for (i = 0, pos = 0; i < num_arrays; i++) {
+  //     memcpy(&Field(res, pos),
+  //            &Field(arrays[i], offsets[i]),
+  //            lengths[i] * sizeof(value));
+  //     pos += lengths[i];
+  //   }
+  //   CAMLassert(pos == size);
+  // }
   else if (size > Max_wosize) {
     /* Array of values, too big. */
     caml_invalid_argument("Array.concat");
@@ -535,23 +537,23 @@ CAMLprim value caml_array_fill(value array,
   }
 #endif
   fp = &Field(array, ofs);
-  if (Is_young(array)) {
-    for (; len > 0; len--, fp++) *fp = val;
-  } else {
-    int is_val_young_block = Is_block(val) && Is_young(val);
-    CAMLassert(Is_in_heap(fp));
-    for (; len > 0; len--, fp++) {
-      value old = *fp;
-      if (old == val) continue;
-      *fp = val;
-      if (Is_block(old)) {
-        if (Is_young(old)) continue;
-        if (caml_gc_phase == Phase_mark) caml_darken(old, NULL);
-      }
-      if (is_val_young_block)
-        add_to_ref_table (Caml_state->ref_table, fp);
+  // if (Is_young(array)) {
+  //   for (; len > 0; len--, fp++) *fp = val;
+  // } else {
+  // int is_val_young_block = Is_block(val) && Is_young(val);
+  CAMLassert(Is_in_heap(fp));
+  for (; len > 0; len--, fp++) {
+    value old = *fp;
+    if (old == val) continue;
+    *fp = val;
+    if (Is_block(old)) {
+      // if (Is_young(old)) continue;
+      if (caml_gc_phase == Phase_mark) caml_darken(old, NULL);
     }
-    if (is_val_young_block) caml_check_urgent_gc (Val_unit);
+    // if (is_val_young_block)
+      // add_to_ref_table (Caml_state->ref_table, fp);
   }
+    // if (is_val_young_block) caml_check_urgent_gc (Val_unit);
+  // }
   return Val_unit;
 }

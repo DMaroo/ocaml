@@ -145,9 +145,9 @@ CAMLprim value caml_obj_with_tag(value new_tag_v, value arg)
   if (tg >= No_scan_tag) {
     res = caml_alloc(sz, tg);
     memcpy(Bp_val(res), Bp_val(arg), sz * sizeof(value));
-  } else if (sz <= Max_young_wosize) {
-    res = caml_alloc_small(sz, tg);
-    for (i = 0; i < sz; i++) Field(res, i) = Field(arg, i);
+  // } else if (sz <= Max_young_wosize) {
+  //   res = caml_alloc_small(sz, tg);
+  //   for (i = 0; i < sz; i++) Field(res, i) = Field(arg, i);
   } else {
     res = caml_alloc_shr(sz, tg);
     /* It is safe to use [caml_initialize] even if [tag == Closure_tag]

@@ -247,25 +247,25 @@ void caml_final_invert_finalisable_values ()
 /* Call [caml_oldify_one] on the closures and values of the recent set.
    This is called by the minor GC through [caml_oldify_local_roots].
 */
-void caml_final_oldify_young_roots ()
-{
-  uintnat i;
+// void caml_final_oldify_young_roots ()
+// {
+//   uintnat i;
 
-  CAMLassert (finalisable_first.old <= finalisable_first.young);
-  for (i = finalisable_first.old; i < finalisable_first.young; i++){
-    caml_oldify_one(finalisable_first.table[i].fun,
-                    &finalisable_first.table[i].fun);
-    caml_oldify_one(finalisable_first.table[i].val,
-                    &finalisable_first.table[i].val);
-  }
+//   CAMLassert (finalisable_first.old <= finalisable_first.young);
+//   for (i = finalisable_first.old; i < finalisable_first.young; i++){
+//     caml_oldify_one(finalisable_first.table[i].fun,
+//                     &finalisable_first.table[i].fun);
+//     caml_oldify_one(finalisable_first.table[i].val,
+//                     &finalisable_first.table[i].val);
+//   }
 
-  CAMLassert (finalisable_last.old <= finalisable_last.young);
-  for (i = finalisable_last.old; i < finalisable_last.young; i++){
-    caml_oldify_one(finalisable_last.table[i].fun,
-                    &finalisable_last.table[i].fun);
-  }
+//   CAMLassert (finalisable_last.old <= finalisable_last.young);
+//   for (i = finalisable_last.old; i < finalisable_last.young; i++){
+//     caml_oldify_one(finalisable_last.table[i].fun,
+//                     &finalisable_last.table[i].fun);
+//   }
 
-}
+// }
 
 static void generic_final_minor_update (struct finalisable * final)
 {
