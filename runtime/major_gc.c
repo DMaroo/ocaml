@@ -617,10 +617,10 @@ Caml_inline void prefetch_block(value v)
   caml_prefetch(&Field(v, 3));
 }
 
-Caml_inline uintnat rotate1(uintnat x)
-{
-  return (x << ((sizeof x)*8 - 1)) | (x >> 1);
-}
+// Caml_inline uintnat rotate1(uintnat x)
+// {
+//   return (x << ((sizeof x)*8 - 1)) | (x >> 1);
+// }
 
 Caml_noinline static intnat do_some_marking
 #ifndef CAML_INSTR
