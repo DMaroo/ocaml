@@ -461,7 +461,10 @@ CAMLexport color_t caml_allocation_color (void *hp)
 }
 
 static header_t *mallocate(mlsize_t wosize) {
-  return caml_stat_alloc_noexc(sizeof(header_t) + Bsize_wsize(wosize));
+  value bsize = Bsize_wsize(wosize);
+  header_t *m = malloc(sizeof(header_t) + bsize);
+  caml_page_table_add(In_heap, m, m + bsize);
+  return m;
 }
 
 Caml_inline value caml_alloc_shr_aux (mlsize_t wosize, tag_t tag, int track,
@@ -594,7 +597,7 @@ CAMLexport void caml_adjust_gc_speed (mlsize_t res, mlsize_t max)
 CAMLexport CAMLweakdef void caml_initialize (value *fp, value val)
 {
   CAMLassert(Is_in_heap_or_young(fp));
-  // *fp = val;
+  *fp = val;
   // if (!Is_young((value)fp) && Is_block (val) && Is_young (val)) {
   //   add_to_ref_table (Caml_state->ref_table, fp);
   // }
