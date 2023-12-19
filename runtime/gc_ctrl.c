@@ -489,6 +489,18 @@ CAMLprim value caml_gc_minor(value v)
   return Val_unit;
 }
 
+double caml_gc_minor_words_unboxed() {
+  return 0;
+}
+
+CAMLprim value caml_gc_minor_words() {
+  return Val_int(0);
+}
+
+CAMLprim value caml_get_minor_free (value v) {
+  return Val_int(0);
+}
+
 static void test_and_compact (void)
 {
   double fp;
