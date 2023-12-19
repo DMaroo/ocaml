@@ -355,53 +355,53 @@ int caml_add_to_heap (char *m)
    to [Max_wosize].
    Return NULL when out of memory.
 */
-static value *expand_heap (mlsize_t request)
-{
-  /* these point to headers, but we do arithmetic on them, hence [value *]. */
-  value *mem, *hp, *prev;
-  asize_t over_request, malloc_request, remain;
+// static value *expand_heap (mlsize_t request)
+// {
+//   /* these point to headers, but we do arithmetic on them, hence [value *]. */
+//   value *mem, *hp, *prev;
+//   asize_t over_request, malloc_request, remain;
 
-  CAMLassert (request <= Max_wosize);
-  over_request = request + request / 100 * caml_percent_free;
-  malloc_request = caml_clip_heap_chunk_wsz (over_request);
-  mem = (value *) caml_alloc_for_heap (Bsize_wsize (malloc_request));
-  if (mem == NULL){
-    caml_gc_message (0x04, "No room for growing heap\n");
-    return NULL;
-  }
-  remain = Wsize_bsize (Chunk_size (mem));
-  prev = hp = mem;
-  /* FIXME find a way to do this with a call to caml_make_free_blocks */
-  while (Wosize_whsize (remain) > Max_wosize){
-    Hd_hp (hp) = Make_header (Max_wosize, 0, Caml_blue);
-#ifdef DEBUG
-    caml_set_fields (Val_hp (hp), 0, Debug_free_major);
-#endif
-    hp += Whsize_wosize (Max_wosize);
-    remain -= Whsize_wosize (Max_wosize);
-    Field (Val_hp (mem), 1) = Field (Val_hp (prev), 0) = Val_hp (hp);
-    prev = hp;
-  }
-  if (remain > 1){
-    Hd_hp (hp) = Make_header (Wosize_whsize (remain), 0, Caml_blue);
-#ifdef DEBUG
-    caml_set_fields (Val_hp (hp), 0, Debug_free_major);
-#endif
-    Field (Val_hp (mem), 1) = Field (Val_hp (prev), 0) = Val_hp (hp);
-    Field (Val_hp (hp), 0) = (value) NULL;
-  }else{
-    Field (Val_hp (prev), 0) = (value) NULL;
-    if (remain == 1) {
-      Hd_hp (hp) = Make_header (0, 0, Caml_white);
-    }
-  }
-  CAMLassert (Wosize_hp (mem) >= request);
-  if (caml_add_to_heap ((char *) mem) != 0){
-    caml_free_for_heap ((char *) mem);
-    return NULL;
-  }
-  return Op_hp (mem);
-}
+//   CAMLassert (request <= Max_wosize);
+//   over_request = request + request / 100 * caml_percent_free;
+//   malloc_request = caml_clip_heap_chunk_wsz (over_request);
+//   mem = (value *) caml_alloc_for_heap (Bsize_wsize (malloc_request));
+//   if (mem == NULL){
+//     caml_gc_message (0x04, "No room for growing heap\n");
+//     return NULL;
+//   }
+//   remain = Wsize_bsize (Chunk_size (mem));
+//   prev = hp = mem;
+//   /* FIXME find a way to do this with a call to caml_make_free_blocks */
+//   while (Wosize_whsize (remain) > Max_wosize){
+//     Hd_hp (hp) = Make_header (Max_wosize, 0, Caml_blue);
+// #ifdef DEBUG
+//     caml_set_fields (Val_hp (hp), 0, Debug_free_major);
+// #endif
+//     hp += Whsize_wosize (Max_wosize);
+//     remain -= Whsize_wosize (Max_wosize);
+//     Field (Val_hp (mem), 1) = Field (Val_hp (prev), 0) = Val_hp (hp);
+//     prev = hp;
+//   }
+//   if (remain > 1){
+//     Hd_hp (hp) = Make_header (Wosize_whsize (remain), 0, Caml_blue);
+// #ifdef DEBUG
+//     caml_set_fields (Val_hp (hp), 0, Debug_free_major);
+// #endif
+//     Field (Val_hp (mem), 1) = Field (Val_hp (prev), 0) = Val_hp (hp);
+//     Field (Val_hp (hp), 0) = (value) NULL;
+//   }else{
+//     Field (Val_hp (prev), 0) = (value) NULL;
+//     if (remain == 1) {
+//       Hd_hp (hp) = Make_header (0, 0, Caml_white);
+//     }
+//   }
+//   CAMLassert (Wosize_hp (mem) >= request);
+//   if (caml_add_to_heap ((char *) mem) != 0){
+//     caml_free_for_heap ((char *) mem);
+//     return NULL;
+//   }
+//   return Op_hp (mem);
+// }
 
 /* Remove the heap chunk [chunk] from the heap and give the memory back
    to [free].
@@ -460,17 +460,18 @@ CAMLexport color_t caml_allocation_color (void *hp)
   }
 }
 
+static header_t *mallocate(mlsize_t wosize) {
+  return caml_stat_alloc_noexc(sizeof(header_t) + Bsize_wsize(wosize));
+}
+
 Caml_inline value caml_alloc_shr_aux (mlsize_t wosize, tag_t tag, int track,
                                       uintnat profinfo)
 {
   header_t *hp;
-  value *new_block;
 
   if (wosize > Max_wosize) return 0;
   CAML_EV_ALLOC(wosize);
-  new_block = expand_heap (wosize);
-  if (new_block == NULL) return 0;
-  hp = (header_t *) new_block;
+  hp = mallocate(wosize);
 
   CAMLassert (Is_in_heap (Val_hp (hp)));
 
