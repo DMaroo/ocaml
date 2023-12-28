@@ -7,6 +7,7 @@
 #include "../caml/roots.h"
 #include "../caml/misc.h"
 
+uint64_t progress = 0;
 
 /* uint64_t roots[MAXIMUM_NO_OF_ROOTS] = {}; */
 /* uint64_t num_of_roots = 0; */
@@ -102,12 +103,13 @@ uint64_t Impl_GC_closure_infix_read_succ_impl(uint8_t *g, uint64_t h_index,
    returned to check the color of the object is white or not*/
 uint64_t Impl_GC_closure_infix_parent_closure_of_infix_object_impl(
     uint8_t *g, uint64_t h_index, uint64_t i) {
-  uint64_t succ = Impl_GC_closure_infix_read_succ_impl(g, h_index, i);
-  uint64_t h_addr_succ = Spec_GC_closure_infix_hd_address(succ);
+  // uint64_t succ = Impl_GC_closure_infix_read_succ_impl(g, h_index, i);
+  uint64_t succ_index = h_index + i * (uint64_t)8U;
+  uint64_t h_addr_succ = Spec_GC_closure_infix_hd_address(succ_index);
   uint32_t x1 = FStar_UInt32_uint_to_t(FStar_UInt64_v(h_addr_succ));
   uint64_t h_addr_succ_val = load64_le(g + x1);
   uint64_t wosize = Spec_GC_closure_infix_getWosize(h_addr_succ_val);
-  uint64_t parent_succ = succ - wosize * (uint64_t)8U;
+  uint64_t parent_succ = succ_index - (wosize + 1) * (uint64_t)8U;
   uint64_t h_addr_parent = Spec_GC_closure_infix_hd_address(parent_succ);
   return h_addr_parent;
 }
@@ -124,10 +126,11 @@ void Impl_GC_closure_infix_darken_body(uint8_t *g, uint64_t *st,
                                        uint64_t *st_len, uint64_t h_index,
                                        uint64_t wz, uint64_t i) {
   uint64_t succ_index = h_index + i * (uint64_t)8U;
-  uint32_t x1 = FStar_UInt32_uint_to_t(FStar_UInt64_v(succ_index));
-  uint64_t succ = load64_le(g + x1);
+  printf("%ld\n", progress++);
+  // uint32_t x1 = FStar_UInt32_uint_to_t(FStar_UInt64_v(succ_index));
+  // uint64_t succ = load64_le(g + x1);
   if (Impl_GC_closure_infix_isPointer(succ_index, g)) {
-    uint64_t h_addr_succ = Spec_GC_closure_infix_hd_address(succ);
+    uint64_t h_addr_succ = Spec_GC_closure_infix_hd_address(succ_index);
     if (Impl_GC_closure_infix_tag_of_block(h_addr_succ, g) == (uint64_t)249U) {
       uint64_t parent_hdr =
           Impl_GC_closure_infix_parent_closure_of_infix_object_impl(g, h_index,
@@ -238,15 +241,18 @@ void Impl_GC7_sweep1(uint8_t *g, uint64_t *h_index, uint64_t limit) {
 void Impl_GC7_mark_and_sweep_GC1_aux(uint8_t *g, uint64_t *st, uint64_t *st_top,
                                      uint64_t *h_list, uint64_t h_list_length,
                                      uint64_t *h_index, uint64_t limit) {
-  Impl_GC7_create_root_stack_and_gray_modified_heap_loop(g, st, st_top, h_list,
-                                                         h_list_length);
+  // Impl_GC7_create_root_stack_and_gray_modified_heap_loop(g, st, st_top, h_list,
+  //                                                        h_list_length);
   Impl_GC_closure_infix_mark_heap(g, st, st_top);
   Impl_GC7_sweep1(g, h_index, limit);
 }
 
 // Handwritten
 void darken_root(value root, value *root_ptr) {
-  Impl_GC_closure_infix_push_to_stack(NULL, stack, stack_top, (uint64_t)root);
+  if (!Is_block(root)) {
+    return;
+  }
+  Impl_GC_closure_infix_push_to_stack(NULL, stack, stack_top, (uint64_t)Hp_val(root));
 }
 
 void Impl_GC7_mark_and_sweep_GC1(uint8_t *g, uint64_t *h_list,
@@ -272,6 +278,6 @@ void Impl_GC7_mark_and_sweep_GC1(uint8_t *g, uint64_t *h_list,
 
 void mark_and_sweep(uint64_t xheap_start, uint64_t heap_end) {
   uint64_t locally_maintained_roots[] = {};
-  Impl_GC7_mark_and_sweep_GC1(NULL, locally_maintained_roots, 0, xheap_start,
+  Impl_GC7_mark_and_sweep_GC1(NULL, locally_maintained_roots, 1024 * 1024, xheap_start,
                               heap_end);
 }
